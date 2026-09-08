@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rack</title>
+<meta name="description" content="A dumbbell training plan that knows what day it is.">
+<meta name="theme-color" content="#e4e3de">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --concrete: #e4e3de;
+  --slab: #f6f5f2;
+  --ink: #182028;
+  --iron: #626b76;
+  --stamp: #c0361e;
+  --rule: #cbc9c2;
+  --pad: 20px;
+  --radius: 4px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--concrete);
+  color: var(--ink);
+  font-family: Archivo, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px; line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+
+body { min-height: 100dvh; display: flex; justify-content: center; }
+
+#app { width: 100%; max-width: 480px; padding: 0 var(--pad) 72px; }
+
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
+button:focus-visible { outline: 2px solid var(--stamp); outline-offset: 3px; }
+
+/* ---------- welcome bar ---------- */
+
+.welcome {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--concrete);
+  padding: 14px 0 10px;
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+}
+
+.hello {
+  margin: 0; font-size: 15px;
+  font-variation-settings: 'wdth' 105, 'wght' 650;
+}
+
+.sync-state { margin: 0; font-size: 12px; color: var(--iron); }
+
+.live { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+
+.live-clock {
+  font-size: 19px;
+  font-variation-settings: 'wdth' 118, 'wght' 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--stamp);
+}
+
+.live-msg {
+  font-size: 12px; color: var(--iron); margin-left: 10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead { display: flex; align-items: baseline; justify-content: space-between; padding: 20px 0 16px; }
+.wordmark { font-variation-settings: 'wdth' 125, 'wght' 800; font-size: 21px; }
+.datestamp { color: var(--iron); font-size: 14px; }
+
+/* ---------- resume ---------- */
+
+.resume {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: var(--ink); color: var(--slab);
+  border-radius: var(--radius); padding: 13px 16px; margin-bottom: 14px;
+  font-size: 14px; min-height: 50px; text-align: left;
+}
+
+.resume-go { font-variation-settings: 'wdth' 105, 'wght' 700; color: #fff; }
+
+/* ---------- hero ---------- */
+
+.hero {
+  background: var(--slab); border: 1px solid var(--rule);
+  border-radius: var(--radius); padding: 22px 20px 20px;
+}
+
+.hero.is-rest { background: transparent; border-style: dashed; }
+.hero.is-done { border-color: var(--ink); }
+
+.hero-mark {
+  font-variation-settings: 'wdth' 125, 'wght' 800;
+  font-size: 76px; line-height: 0.82; letter-spacing: -0.03em;
+  color: var(--stamp); font-variant-numeric: tabular-nums;
+}
+
+.hero.is-rest .hero-mark { color: var(--iron); font-size: 44px; }
+.hero.is-done .hero-mark { color: var(--ink); font-size: 52px; }
+
+.hero-title { font-variation-settings: 'wdth' 112, 'wght' 700; font-size: 27px; line-height: 1.1; margin: 12px 0 4px; }
+.hero-groups { color: var(--iron); font-size: 15px; margin: 0 0 2px; }
+.hero-count { color: var(--iron); font-size: 14px; font-variant-numeric: tabular-nums; margin: 0; }
+.hero-actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+.btn {
+  background: var(--ink); color: var(--slab);
+  border-radius: var(--radius); padding: 14px 22px;
+  font-variation-settings: 'wdth' 105, 'wght' 650;
+  font-size: 16px; min-height: 52px; flex: 1 1 auto;
+}
+
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { background: var(--rule); color: var(--iron); }
+.btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+
+.linky {
+  display: block; width: 100%; text-align: center;
+  color: var(--iron); font-size: 14px; padding: 14px 0; min-height: 44px;
+}
+
+/* ---------- split switch ---------- */
+
+.switch {
+  display: flex; margin: 22px 0 4px;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  overflow: hidden; background: var(--slab);
+}
+
+.switch button { flex: 1; padding: 12px 8px; font-size: 15px; color: var(--iron); min-height: 48px; }
+.switch button[aria-pressed="true"] { background: var(--ink); color: var(--slab); font-variation-settings: 'wght' 700; }
+.switch-note { color: var(--iron); font-size: 13px; margin: 8px 0 0; }
+
+/* ---------- week strip ---------- */
+
+.week { display: flex; gap: 6px; margin: 26px 0 8px; }
+
+.week-day {
+  flex: 1 1 0; min-width: 0;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--slab); padding: 8px 2px 9px; text-align: center; min-height: 62px;
+}
+
+.week-day .wd { display: block; font-size: 12px; color: var(--iron); }
+.week-day .wm { display: block; font-size: 18px; margin-top: 4px; font-variation-settings: 'wdth' 118, 'wght' 750; }
+.week-day.is-rest .wm { color: var(--rule); }
+.week-day.is-today { border-color: var(--ink); border-width: 2px; }
+.week-day.is-logged { background: #dcded6; }
+.week-day.is-logged .wm { color: var(--stamp); }
+.week-day[aria-pressed="true"] { background: var(--ink); }
+.week-day[aria-pressed="true"] .wd { color: var(--rule); }
+.week-day[aria-pressed="true"] .wm { color: var(--slab); }
+
+/* ---------- exercise list ---------- */
+
+.section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 30px 0 12px; }
+.section-head h2 { font-size: 17px; margin: 0; font-variation-settings: 'wdth' 108, 'wght' 700; }
+.section-head span { color: var(--iron); font-size: 13px; }
+
+.group-label {
+  color: var(--iron); font-size: 13px; margin: 20px 0 8px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--rule);
+  font-variation-settings: 'wght' 600;
+}
+
+.card {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+  background: var(--slab); border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: 10px 14px 10px 8px; margin-bottom: 8px; min-height: 72px;
+}
+
+.card:active { background: #eeece7; }
+.card-thumb { width: 68px; flex: 0 0 68px; }
+.card-body h3 { margin: 0; font-size: 16px; font-variation-settings: 'wdth' 105, 'wght' 650; }
+.card-body p { margin: 2px 0 0; color: var(--iron); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* ---------- detail and runner ---------- */
+
+.back { padding: 12px 0; color: var(--iron); font-size: 15px; min-height: 44px; }
+
+.detail-stage {
+  background: var(--slab); border: 1px solid var(--rule);
+  border-radius: var(--radius); padding: 8px; margin-top: 4px;
+}
+
+.detail-stage .figure { width: 100%; height: auto; display: block; }
+
+.detail h1, .run-name {
+  font-size: 30px; line-height: 1.08; margin: 20px 0 6px;
+  font-variation-settings: 'wdth' 112, 'wght' 750;
+}
+
+.detail-meta { color: var(--iron); font-size: 15px; font-variant-numeric: tabular-nums; margin: 0; }
+.desc { font-size: 15px; margin: 14px 0 0; }
+
+.cues { margin: 20px 0 0; padding: 0; list-style: none; }
+.cues li { padding: 11px 0 11px 18px; border-top: 1px solid var(--rule); position: relative; font-size: 15px; }
+.cues li::before { content: ''; position: absolute; left: 0; top: 19px; width: 7px; height: 2px; background: var(--stamp); }
+
+.stage-note { margin-top: 24px; color: var(--iron); font-size: 13px; border-top: 1px solid var(--rule); padding-top: 12px; }
+
+.run-top { display: flex; align-items: center; justify-content: space-between; }
+.run-pos { color: var(--iron); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.bar { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; margin: 4px 0 6px; }
+.bar span { display: block; height: 100%; background: var(--stamp); transition: width 0.3s ease; }
+.bar.is-set { height: 10px; border-radius: 5px; }
+.bar-note { margin: 0 0 12px; color: var(--iron); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.set-count { margin: 16px 0 8px; font-size: 20px; }
+.set-count strong { font-size: 30px; font-variation-settings: 'wdth' 118, 'wght' 800; color: var(--stamp); font-variant-numeric: tabular-nums; }
+
+.cue-strip { color: var(--iron); font-size: 14px; text-align: center; margin: 14px 0 0; }
+
+.weight {
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--slab); margin-top: 18px; padding: 4px;
+}
+
+.weight button { width: 64px; min-height: 48px; font-size: 24px; color: var(--ink); }
+.weight span { font-size: 15px; color: var(--iron); font-variant-numeric: tabular-nums; }
+.weight strong { font-size: 22px; color: var(--ink); font-variation-settings: 'wdth' 112, 'wght' 750; }
+
+.rest { text-align: center; padding: 26px 0 10px; }
+.rest-label { margin: 0; color: var(--iron); font-size: 14px; }
+.rest-clock {
+  margin: 2px 0 4px; font-size: 68px; line-height: 1;
+  font-variation-settings: 'wdth' 118, 'wght' 800;
+  font-variant-numeric: tabular-nums; color: var(--stamp);
+}
+.rest-next { margin: 0; color: var(--iron); font-size: 14px; }
+
+/* ---------- muscle map ---------- */
+
+.mmap {
+  margin-top: 18px; background: var(--slab);
+  border: 1px solid var(--rule); border-radius: var(--radius); padding: 10px 12px 8px;
+}
+
+.mmap-svg { width: 100%; height: auto; display: block; max-height: 210px; }
+.mm-base { fill: var(--rule); opacity: 0.55; }
+.mm-second { fill: var(--stamp); opacity: 0.32; }
+.mm-first { fill: var(--stamp); }
+.mm-cap { fill: var(--iron); font-size: 7px; text-anchor: middle; font-family: inherit; }
+
+.mmap-key { margin-top: 6px; }
+.mm-line { margin: 2px 0; font-size: 13px; color: var(--iron); display: flex; align-items: center; gap: 7px; }
+.mm-dot { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 9px; }
+.mm-dot.is-first { background: var(--stamp); }
+.mm-dot.is-second { background: var(--stamp); opacity: 0.32; }
+
+/* ---------- figure colours ---------- */
+
+.fig-prop { stroke: var(--rule); stroke-linecap: round; }
+.fig-far { stroke: var(--iron); stroke-linecap: round; opacity: 0.38; }
+.fig-near, .fig-torso { stroke: var(--ink); stroke-linecap: round; }
+.fig-head { fill: var(--ink); }
+.fig-bell rect { fill: var(--stamp); }
+
+/* ---------- card tools ---------- */
+
+.card { display: block; padding: 0; }
+
+.card-main {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+  padding: 10px 14px 8px 8px; background: none; min-height: 72px;
+}
+
+.card-main:active { background: #eeece7; }
+
+.card-tag {
+  display: block; font-size: 11px; color: var(--iron);
+  font-variant-numeric: tabular-nums; margin-bottom: 1px;
+}
+
+.card-tools {
+  display: flex; gap: 1px; border-top: 1px solid var(--rule);
+  background: var(--rule);
+}
+
+.card-tools button {
+  flex: 0 0 auto; width: 56px; min-height: 42px;
+  background: var(--slab); color: var(--ink); font-size: 15px;
+}
+
+.card-tools button[disabled] { color: var(--rule); }
+.card-tools .tool-wide { flex: 1 1 auto; width: auto; font-size: 14px; color: var(--iron); }
+.card-tools button:active { background: #eeece7; }
+
+/* ---------- day mover ---------- */
+
+.mover {
+  margin-top: 12px; padding: 14px 14px 8px;
+  border: 1px solid var(--ink); border-radius: var(--radius); background: var(--slab);
+}
+
+.mover-head { margin: 0 0 10px; font-size: 15px; font-variation-settings: 'wght' 650; }
+.mover-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.mover-day {
+  flex: 1 1 30%; min-width: 96px; text-align: left;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: 8px 10px; min-height: 52px; background: var(--concrete);
+}
+
+.mover-day[disabled] { opacity: 0.4; }
+.mv-name { display: block; font-size: 12px; color: var(--iron); }
+.mv-what { display: block; font-size: 14px; font-variation-settings: 'wght' 650; }
+.mover-foot { display: flex; gap: 8px; }
+.mover-foot .linky { flex: 1; }
+
+/* ---------- history ---------- */
+
+.datestamp { padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+
+.hists { list-style: none; margin: 8px 0 0; padding: 0; }
+
+.hist {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 11px 0; border-top: 1px solid var(--rule); font-size: 14px;
+}
+
+.hist-date { flex: 0 0 82px; color: var(--iron); font-variant-numeric: tabular-nums; }
+.hist-title { flex: 1 1 auto; font-variation-settings: 'wght' 650; }
+.hist-meta { color: var(--iron); font-variant-numeric: tabular-nums; font-size: 13px; }
+.hist-empty { color: var(--iron); }
+
+#boot{margin:24px 16px;padding:16px;max-width:480px;border:2px solid #c0361e;border-radius:4px;
+background:#fff;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#182028;white-space:pre-wrap;word-break:break-word}
+#boot h2{margin:0 0 8px;font-size:15px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+window.addEventListener('error', function (e) {
+  var box = document.getElementById('boot');
+  if (!box) { box = document.createElement('div'); box.id='boot';
+    box.innerHTML='<h2>Rack could not start</h2>'; document.body.appendChild(box); }
+  box.appendChild(document.createTextNode((e.message||'Unknown error')+'\n  line '+(e.lineno||'?')+'\n'));
+}, true);
+</script>
+<script>
+/* ===== exercises.js ===== */
+/* Exercise library.
+   `pose` is one end of the rep, `end` is the other. The renderer tweens between them.
+   `end` only lists the joints that move, everything else is inherited from `pose`. */
+
+const ATHLETE = 'Andrismar Tejada';
+const MAX_DUMBBELL = 55;   // lb, per hand
+const WEIGHT_STEP = 5;
+
+const GROUPS = {
+  chest:     { name: 'Chest',     rest: 75 },
+  back:      { name: 'Back',      rest: 75 },
+  shoulders: { name: 'Shoulders', rest: 75 },
+  biceps:    { name: 'Biceps',    rest: 60 },
+  triceps:   { name: 'Triceps',   rest: 60 },
+  legs:      { name: 'Legs',      rest: 90 },
+  core:      { name: 'Core',      rest: 45 }
+};
+
+const FLOOR = { p1: [10, 116], p2: [130, 116] };
+const BENCH_FLAT = [FLOOR, { p1: [30, 78], p2: [112, 78] }, { p1: [46, 78], p2: [46, 100] }, { p1: [100, 78], p2: [100, 100] }];
+const BENCH_TOP = y0 => [{ p1: [y0[0], 48], p2: [y0[1], 48] }, { p1: [y0[0], 76], p2: [y0[1], 76] }];
+
+const EXERCISES = [
+  /* ---------- CHEST ---------- */
+  {
+    id: 'chest_flat_press',
+    name: 'Flat bench press',
+    group: 'chest',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'The main chest builder. Lying flat, you press both bells from chest height to straight overhead.',
+    muscles: { primary: ['chest'], secondary: ['frontDelt', 'triceps'] },
+    cues: ['Feet flat, ribs down', 'Elbows about 45 degrees from the torso', 'Lower slowly, press without slamming the bells together'],
+    pose: {
+      props: BENCH_FLAT,
+      head: [40, 64], neck: [52, 68], hip: [86, 70],
+      near: { shoulder: [52, 68], elbow: [52, 52], hand: [54, 38], knee: [96, 92], foot: [102, 116] },
+      far:  { shoulder: [50, 66], elbow: [49, 50], hand: [51, 36], knee: [92, 94], foot: [98, 116] },
+      db: [[54, 38, 0], [51, 36, 0]]
+    },
+    end: {
+      near: { elbow: [45, 61], hand: [57, 55] },
+      far:  { elbow: [42, 59], hand: [54, 53] },
+      db: [[57, 55, 0], [54, 53, 0]]
+    }
+  },
+  {
+    id: 'chest_incline_press',
+    name: 'Incline press',
+    group: 'chest',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'Bench set to about 30 degrees. Shifts the work onto the upper chest and front shoulder.',
+    muscles: { primary: ['chest', 'frontDelt'], secondary: ['triceps'] },
+    cues: ['Set the bench near 30 degrees', 'Drive up and slightly back', 'Keep the shoulder blades pinned'],
+    pose: {
+      props: [FLOOR, { p1: [46, 50], p2: [80, 82] }, { p1: [80, 82], p2: [108, 84] }, { p1: [86, 84], p2: [86, 104] }],
+      head: [44, 44], neck: [54, 54], hip: [80, 80],
+      near: { shoulder: [54, 54], elbow: [52, 40], hand: [56, 24], knee: [98, 96], foot: [104, 116] },
+      far:  { shoulder: [52, 52], elbow: [49, 38], hand: [53, 22], knee: [94, 98], foot: [100, 116] },
+      db: [[56, 24, 0], [53, 22, 0]]
+    },
+    end: {
+      near: { elbow: [45, 50], hand: [60, 44] },
+      far:  { elbow: [42, 48], hand: [57, 42] },
+      db: [[60, 44, 0], [57, 42, 0]]
+    }
+  },
+  {
+    id: 'chest_flye',
+    name: 'Dumbbell flye',
+    group: 'chest',
+    sets: 3, reps: '10-15', tempo: 3.2,
+    desc: 'Arms open wide in an arc with the elbows locked soft. Stretches the chest rather than loading it heavy.',
+    muscles: { primary: ['chest'], secondary: ['frontDelt'] },
+    cues: ['Soft bend in the elbows, hold it', 'Open until you feel a stretch, no further', 'Squeeze the chest to bring them back'],
+    pose: {
+      props: BENCH_TOP([22, 98]),
+      head: [30, 62], neck: [44, 62], hip: [86, 62],
+      near: { shoulder: [50, 54], elbow: [50, 38], hand: [48, 22], knee: [104, 54], foot: [124, 50] },
+      far:  { shoulder: [50, 70], elbow: [50, 86], hand: [48, 102], knee: [104, 70], foot: [124, 74] },
+      db: [[46, 20, 0], [46, 104, 0]]
+    },
+    end: {
+      near: { elbow: [52, 46], hand: [58, 56] },
+      far:  { elbow: [52, 78], hand: [58, 68] },
+      db: [[58, 55, 0], [58, 69, 0]]
+    }
+  },
+
+  /* ---------- BACK ---------- */
+  {
+    id: 'back_single_row',
+    name: 'Single arm row',
+    group: 'back',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'One hand and one knee on the bench, the other arm rows a bell from a full hang up to the ribs.',
+    muscles: { primary: ['lats'], secondary: ['biceps', 'rearDelt', 'traps'] },
+    cues: ['Brace the free hand on the bench', 'Pull the elbow past the ribs', 'Do not rotate the shoulders open'],
+    pose: {
+      props: [FLOOR, { p1: [34, 70], p2: [96, 70] }, { p1: [44, 70], p2: [44, 96] }],
+      head: [30, 50], neck: [42, 56], hip: [76, 62],
+      near: { shoulder: [44, 58], elbow: [60, 44], hand: [51, 62], knee: [56, 70], foot: [36, 74] },
+      far:  { shoulder: [42, 55], elbow: [40, 62], hand: [40, 69], knee: [86, 88], foot: [88, 116] },
+      db: [[51, 62, 0]]
+    },
+    end: {
+      near: { elbow: [47, 74], hand: [49, 92] },
+      db: [[49, 94, 0]]
+    }
+  },
+  {
+    id: 'back_bent_row',
+    name: 'Bent over row',
+    group: 'back',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'Hinged at the hips with a flat back, both bells row to the lower ribs at once.',
+    muscles: { primary: ['lats', 'traps'], secondary: ['biceps', 'rearDelt', 'lowerBack'] },
+    cues: ['Hinge to about 45 degrees, flat back', 'Row to the lower ribs', 'Control the way down'],
+    pose: {
+      props: [FLOOR],
+      head: [36, 52], neck: [48, 58], hip: [82, 64],
+      near: { shoulder: [48, 58], elbow: [63, 47], hand: [53, 67], knee: [88, 88], foot: [90, 116] },
+      far:  { shoulder: [46, 56], elbow: [60, 45], hand: [50, 65], knee: [84, 90], foot: [86, 116] },
+      db: [[53, 67, 0], [50, 65, 0]]
+    },
+    end: {
+      near: { elbow: [51, 76], hand: [54, 94] },
+      far:  { elbow: [48, 74], hand: [51, 92] },
+      db: [[54, 96, 0], [51, 94, 0]]
+    }
+  },
+  {
+    id: 'back_pullover',
+    name: 'Dumbbell pullover',
+    group: 'back',
+    sets: 3, reps: '10-12', tempo: 3.2,
+    desc: 'Two hands on one bell, arms sweep in a long arc from behind the head back over the chest.',
+    muscles: { primary: ['lats'], secondary: ['chest', 'triceps'] },
+    cues: ['Two hands on one bell', 'Reach back only as far as the ribs allow', 'Keep the lower back on the bench'],
+    pose: {
+      props: BENCH_TOP([32, 108]),
+      head: [48, 62], neck: [60, 62], hip: [96, 62],
+      near: { shoulder: [62, 54], elbow: [46, 48], hand: [30, 52], knee: [112, 54], foot: [130, 50] },
+      far:  { shoulder: [62, 70], elbow: [46, 76], hand: [30, 72], knee: [112, 70], foot: [130, 74] },
+      db: [[24, 62, 90]]
+    },
+    end: {
+      near: { elbow: [56, 48], hand: [64, 56] },
+      far:  { elbow: [56, 76], hand: [64, 68] },
+      db: [[68, 62, 90]]
+    }
+  },
+
+  /* ---------- SHOULDERS ---------- */
+  {
+    id: 'shoulders_ohp',
+    name: 'Overhead press',
+    group: 'shoulders',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'Standing, both bells go from shoulder height to locked overhead. The main shoulder strength lift.',
+    muscles: { primary: ['frontDelt', 'sideDelt'], secondary: ['triceps', 'traps', 'abs'] },
+    cues: ['Squeeze the glutes, ribs down', 'Press up, not forward', 'Stop just short of locking out'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [48, 34], hand: [50, 16], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [92, 34], hand: [90, 16], knee: [79, 92], foot: [81, 116] },
+      db: [[50, 16, 0], [90, 16, 0]]
+    },
+    end: {
+      near: { elbow: [44, 52], hand: [50, 36] },
+      far:  { elbow: [96, 52], hand: [90, 36] },
+      db: [[50, 36, 0], [90, 36, 0]]
+    }
+  },
+  {
+    id: 'shoulders_lateral',
+    name: 'Lateral raise',
+    group: 'shoulders',
+    sets: 3, reps: '12-15', tempo: 3.0,
+    desc: 'Arms lift straight out to the sides up to shoulder height. Builds the width of the shoulder.',
+    muscles: { primary: ['sideDelt'], secondary: ['traps'] },
+    cues: ['Light weight, this one is not a strength lift', 'Lead with the elbows', 'Stop at shoulder height'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [41, 44], hand: [25, 46], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [99, 44], hand: [115, 46], knee: [79, 92], foot: [81, 116] },
+      db: [[25, 46, 0], [115, 46, 0]]
+    },
+    end: {
+      near: { elbow: [56, 60], hand: [57, 80] },
+      far:  { elbow: [84, 60], hand: [83, 80] },
+      db: [[57, 82, 0], [83, 82, 0]]
+    }
+  },
+  {
+    id: 'shoulders_rear_flye',
+    name: 'Rear delt flye',
+    group: 'shoulders',
+    sets: 3, reps: '12-15', tempo: 3.0,
+    desc: 'Hinged forward with the chest down, arms sweep wide and back. Hits the part of the shoulder pressing misses.',
+    muscles: { primary: ['rearDelt'], secondary: ['traps', 'lats'] },
+    cues: ['Hinge forward, chest toward the floor', 'Sweep the arms wide and slightly back', 'No swinging'],
+    pose: {
+      props: [FLOOR],
+      head: [56, 40], neck: [64, 50], hip: [76, 74],
+      near: { shoulder: [54, 54], elbow: [39, 50], hand: [23, 44], knee: [64, 92], foot: [62, 116] },
+      far:  { shoulder: [74, 54], elbow: [90, 50], hand: [106, 44], knee: [86, 92], foot: [88, 116] },
+      db: [[23, 44, 0], [106, 44, 0]]
+    },
+    end: {
+      near: { elbow: [54, 68], hand: [57, 86] },
+      far:  { elbow: [74, 68], hand: [71, 86] },
+      db: [[57, 88, 0], [71, 88, 0]]
+    }
+  },
+
+  /* ---------- BICEPS ---------- */
+  {
+    id: 'biceps_curl',
+    name: 'Standing curl',
+    group: 'biceps',
+    sets: 3, reps: '10-12', tempo: 2.6,
+    desc: 'Palms up, elbows pinned to the ribs, the bells curl from a full hang to the shoulder.',
+    muscles: { primary: ['biceps'], secondary: ['forearm'] },
+    cues: ['Elbows stay pinned to the ribs', 'Palms turn up as you lift', 'Lower over three seconds'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [55, 63], hand: [57, 44], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [85, 63], hand: [83, 44], knee: [79, 92], foot: [81, 116] },
+      db: [[54, 44, 0], [86, 44, 0]]
+    },
+    end: {
+      near: { hand: [55, 84] },
+      far:  { hand: [85, 84] },
+      db: [[54, 86, 0], [86, 86, 0]]
+    }
+  },
+  {
+    id: 'biceps_hammer',
+    name: 'Hammer curl',
+    group: 'biceps',
+    sets: 3, reps: '10-12', tempo: 2.6,
+    desc: 'Same curl with the palms facing each other the whole way. Loads the forearm and the outer arm harder.',
+    muscles: { primary: ['biceps', 'forearm'], secondary: [] },
+    cues: ['Palms face each other the whole way', 'Elbows do not drift forward', 'Same tempo down as up'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [55, 63], hand: [57, 44], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [85, 63], hand: [83, 44], knee: [79, 92], foot: [81, 116] },
+      db: [[54, 44, 90], [86, 44, 90]]
+    },
+    end: {
+      near: { hand: [55, 84] },
+      far:  { hand: [85, 84] },
+      db: [[54, 86, 90], [86, 86, 90]]
+    }
+  },
+  {
+    id: 'biceps_incline_curl',
+    name: 'Incline curl',
+    group: 'biceps',
+    sets: 3, reps: '10-12', tempo: 3.0,
+    desc: 'Seated leaning back on the incline bench so the arms hang behind you. The hardest stretch a curl can get.',
+    muscles: { primary: ['biceps'], secondary: ['frontDelt'] },
+    cues: ['Let the arms hang fully behind you', 'This stretch is the whole point, do not cut it', 'Light weight only'],
+    pose: {
+      props: [FLOOR, { p1: [48, 38], p2: [78, 80] }, { p1: [78, 80], p2: [106, 82] }, { p1: [86, 82], p2: [86, 104] }],
+      head: [46, 32], neck: [56, 44], hip: [78, 78],
+      near: { shoulder: [56, 44], elbow: [57, 64], hand: [60, 85], knee: [104, 92], foot: [110, 116] },
+      far:  { shoulder: [54, 42], elbow: [54, 62], hand: [57, 83], knee: [100, 94], foot: [106, 116] },
+      db: [[60, 87, 0], [57, 85, 0]]
+    },
+    end: {
+      near: { elbow: [57, 64], hand: [45, 52] },
+      far:  { elbow: [54, 62], hand: [42, 50] },
+      db: [[43, 51, 0], [40, 49, 0]]
+    }
+  },
+
+  /* ---------- TRICEPS ---------- */
+  {
+    id: 'triceps_overhead_ext',
+    name: 'Overhead extension',
+    group: 'triceps',
+    sets: 3, reps: '10-12', tempo: 2.8,
+    desc: 'One bell held in both hands behind the head, then pressed straight up. Stretches the long head of the triceps.',
+    muscles: { primary: ['triceps'], secondary: ['abs'] },
+    cues: ['Two hands under one bell', 'Elbows point forward, not out', 'Ribs stay down, no arching'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [57, 24], hand: [66, 44], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [83, 24], hand: [74, 44], knee: [79, 92], foot: [81, 116] },
+      db: [[70, 46, 90]]
+    },
+    end: {
+      near: { elbow: [59, 26], hand: [65, 11] },
+      far:  { elbow: [81, 26], hand: [75, 11] },
+      db: [[70, 9, 90]]
+    }
+  },
+  {
+    id: 'triceps_lying_ext',
+    name: 'Lying extension',
+    group: 'triceps',
+    sets: 3, reps: '10-12', tempo: 2.8,
+    desc: 'Flat on the bench with the upper arms held vertical, only the forearms move. Elbow work, nothing else.',
+    muscles: { primary: ['triceps'], secondary: [] },
+    cues: ['Upper arms stay vertical', 'Lower toward the forehead, not the chest', 'Stop before the elbows flare'],
+    pose: {
+      props: BENCH_FLAT,
+      head: [40, 64], neck: [52, 68], hip: [86, 70],
+      near: { shoulder: [52, 68], elbow: [55, 44], hand: [43, 53], knee: [96, 92], foot: [102, 116] },
+      far:  { shoulder: [50, 66], elbow: [52, 42], hand: [40, 51], knee: [92, 94], foot: [98, 116] },
+      db: [[43, 53, 60], [40, 51, 60]]
+    },
+    end: {
+      near: { hand: [57, 28] },
+      far:  { hand: [54, 26] },
+      db: [[57, 28, 0], [54, 26, 0]]
+    }
+  },
+  {
+    id: 'triceps_kickback',
+    name: 'Kickback',
+    group: 'triceps',
+    sets: 3, reps: '12-15', tempo: 2.6,
+    desc: 'Hinged forward with the upper arm locked parallel to the floor, the forearm extends straight back.',
+    muscles: { primary: ['triceps'], secondary: ['rearDelt'] },
+    cues: ['Upper arm parallel to the floor and still', 'Only the forearm moves', 'Hold the lockout for a beat'],
+    pose: {
+      props: [FLOOR],
+      head: [36, 52], neck: [48, 58], hip: [82, 64],
+      near: { shoulder: [48, 58], elbow: [67, 59], hand: [88, 51], knee: [88, 88], foot: [90, 116] },
+      far:  { shoulder: [46, 56], elbow: [64, 57], hand: [85, 49], knee: [84, 90], foot: [86, 116] },
+      db: [[88, 51, 60], [85, 49, 60]]
+    },
+    end: {
+      near: { hand: [71, 78] },
+      far:  { hand: [68, 76] },
+      db: [[71, 80, 0], [68, 78, 0]]
+    }
+  },
+
+  /* ---------- LEGS ---------- */
+  {
+    id: 'legs_goblet_squat',
+    name: 'Goblet squat',
+    group: 'legs',
+    sets: 3, reps: '10-12', tempo: 3.2,
+    desc: 'One bell held upright against the chest while you squat down between the hips and stand back up.',
+    muscles: { primary: ['quads', 'glutes'], secondary: ['abs', 'hamstrings', 'traps'] },
+    cues: ['Bell held vertical against the chest', 'Sit down between the hips', 'Knees track over the toes'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 38], neck: [70, 52], hip: [70, 86],
+      near: { shoulder: [58, 57], elbow: [56, 68], hand: [66, 64], knee: [50, 96], foot: [54, 116] },
+      far:  { shoulder: [82, 57], elbow: [84, 68], hand: [74, 64], knee: [90, 96], foot: [86, 116] },
+      db: [[70, 64, 90]]
+    },
+    end: {
+      head: [70, 16], neck: [70, 30], hip: [70, 64],
+      near: { shoulder: [58, 35], elbow: [56, 46], hand: [66, 42], knee: [61, 90], foot: [59, 116] },
+      far:  { shoulder: [82, 35], elbow: [84, 46], hand: [74, 42], knee: [79, 90], foot: [81, 116] },
+      db: [[70, 42, 90]]
+    }
+  },
+  {
+    id: 'legs_rdl',
+    name: 'Romanian deadlift',
+    group: 'legs',
+    sets: 3, reps: '8-12', tempo: 3.2,
+    desc: 'Hips push back with almost straight legs until the hamstrings stretch, then drive back to standing.',
+    muscles: { primary: ['hamstrings', 'glutes'], secondary: ['lowerBack', 'traps', 'forearm'] },
+    cues: ['Push the hips back, do not bend the knees more', 'Bells stay close to the legs', 'Stop when the hamstrings say stop'],
+    pose: {
+      props: [FLOOR],
+      head: [38, 48], neck: [50, 54], hip: [84, 62],
+      near: { shoulder: [50, 54], elbow: [53, 74], hand: [56, 92], knee: [90, 88], foot: [92, 116] },
+      far:  { shoulder: [48, 52], elbow: [50, 72], hand: [53, 90], knee: [86, 90], foot: [88, 116] },
+      db: [[56, 94, 0], [53, 92, 0]]
+    },
+    end: {
+      head: [70, 20], neck: [70, 34], hip: [70, 68],
+      near: { shoulder: [58, 39], elbow: [56, 58], hand: [55, 78], knee: [62, 92], foot: [60, 116] },
+      far:  { shoulder: [82, 39], elbow: [84, 58], hand: [85, 78], knee: [80, 92], foot: [82, 116] },
+      db: [[55, 80, 0], [85, 80, 0]]
+    }
+  },
+  {
+    id: 'legs_reverse_lunge',
+    name: 'Reverse lunge',
+    group: 'legs',
+    sets: 3, reps: '10 each side', tempo: 3.4,
+    desc: 'Step one leg back and drop the knee toward the floor, then drive off the front leg to stand.',
+    muscles: { primary: ['quads', 'glutes'], secondary: ['hamstrings', 'abs'] },
+    cues: ['Step back, not forward', 'Front shin close to vertical', 'Back knee kisses the floor'],
+    pose: {
+      props: [FLOOR],
+      head: [64, 24], neck: [64, 38], hip: [66, 72],
+      near: { shoulder: [56, 43], elbow: [56, 62], hand: [57, 82], knee: [88, 88], foot: [88, 116] },
+      far:  { shoulder: [72, 43], elbow: [73, 62], hand: [74, 82], knee: [46, 94], foot: [34, 116] },
+      db: [[57, 84, 0], [74, 84, 0]]
+    },
+    end: {
+      head: [70, 20], neck: [70, 34], hip: [70, 66],
+      near: { shoulder: [60, 39], elbow: [59, 58], hand: [58, 78], knee: [63, 90], foot: [61, 116] },
+      far:  { shoulder: [80, 39], elbow: [81, 58], hand: [82, 78], knee: [78, 90], foot: [80, 116] },
+      db: [[58, 80, 0], [82, 80, 0]]
+    }
+  },
+
+  /* ---------- CORE ---------- */
+  {
+    id: 'core_russian_twist',
+    name: 'Russian twist',
+    group: 'core',
+    sets: 3, reps: '20 total', tempo: 2.4,
+    desc: 'Seated and leaning back, one bell travels side to side across the body. Rotation under load.',
+    muscles: { primary: ['obliques', 'abs'], secondary: ['frontDelt'] },
+    cues: ['Lean back until the abs switch on', 'Rotate from the ribs, not the arms', 'Heels can stay down if the back rounds'],
+    pose: {
+      props: [FLOOR],
+      head: [46, 60], neck: [58, 72], hip: [94, 110],
+      near: { shoulder: [58, 72], elbow: [58, 90], hand: [42, 94], knee: [70, 88], foot: [52, 112] },
+      far:  { shoulder: [55, 75], elbow: [55, 93], hand: [39, 97], knee: [75, 92], foot: [57, 115] },
+      db: [[40, 98, 90]]
+    },
+    end: {
+      near: { elbow: [66, 86], hand: [80, 92] },
+      far:  { elbow: [63, 89], hand: [77, 95] },
+      db: [[82, 94, 90]]
+    }
+  },
+  {
+    id: 'core_side_bend',
+    name: 'Side bend',
+    group: 'core',
+    sets: 3, reps: '12 each side', tempo: 2.6,
+    desc: 'One bell hanging at your side while you bend straight sideways and come back up. Loads the obliques.',
+    muscles: { primary: ['obliques'], secondary: ['lowerBack', 'forearm'] },
+    cues: ['One bell only, the other hand behind the head', 'Bend straight sideways, no twisting', 'Slow at the bottom'],
+    pose: {
+      props: [FLOOR],
+      head: [58, 24], neck: [62, 38], hip: [70, 72],
+      near: { shoulder: [51, 43], elbow: [48, 60], hand: [45, 82], knee: [62, 92], foot: [60, 116] },
+      far:  { shoulder: [73, 43], elbow: [83, 50], hand: [70, 34], knee: [80, 92], foot: [82, 116] },
+      db: [[45, 86, 0]]
+    },
+    end: {
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [58, 41], elbow: [56, 60], hand: [55, 80], knee: [62, 92], foot: [60, 116] },
+      far:  { shoulder: [82, 41], elbow: [90, 48], hand: [78, 32], knee: [80, 92], foot: [82, 116] },
+      db: [[55, 84, 0]]
+    }
+  },
+  {
+    id: 'core_weighted_crunch',
+    name: 'Weighted crunch',
+    group: 'core',
+    sets: 3, reps: '12-15', tempo: 2.4,
+    desc: 'On the floor with the knees bent and a bell on the chest, curl the ribs toward the hips.',
+    muscles: { primary: ['abs'], secondary: ['obliques'] },
+    cues: ['Bell held on the chest, not behind the neck', 'Curl the ribs toward the hips', 'Lower back stays down'],
+    pose: {
+      props: [FLOOR],
+      head: [40, 72], neck: [52, 82], hip: [82, 108],
+      near: { shoulder: [52, 82], elbow: [57, 95], hand: [46, 89], knee: [100, 90], foot: [116, 114] },
+      far:  { shoulder: [55, 85], elbow: [60, 98], hand: [49, 92], knee: [104, 93], foot: [120, 116] },
+      db: [[42, 87, 90]]
+    },
+    end: {
+      head: [28, 96], neck: [42, 100], hip: [82, 108],
+      near: { shoulder: [42, 100], elbow: [50, 108], hand: [38, 104] },
+      far:  { shoulder: [45, 103], elbow: [53, 111], hand: [41, 107] },
+      db: [[34, 102, 90]]
+    }
+  },
+
+  /* ---------- ALTERNATES ---------- */
+  {
+    id: 'chest_floor_press',
+    name: 'Floor press',
+    group: 'chest',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'A press done lying on the floor. The elbows stop at ground level, which keeps the shoulder out of trouble.',
+    muscles: { primary: ['chest', 'triceps'], secondary: ['frontDelt'] },
+    cues: ['Elbows touch the floor, then pause', 'No bouncing off the ground', 'Heels driving into the floor'],
+    pose: {
+      props: [FLOOR],
+      head: [36, 96], neck: [50, 98], hip: [88, 100],
+      near: { shoulder: [50, 98], elbow: [50, 80], hand: [52, 64], knee: [104, 84], foot: [118, 112] },
+      far:  { shoulder: [48, 96], elbow: [47, 78], hand: [49, 62], knee: [108, 87], foot: [122, 114] },
+      db: [[52, 64, 0], [49, 62, 0]]
+    },
+    end: {
+      near: { elbow: [44, 92], hand: [56, 86] },
+      far:  { elbow: [41, 90], hand: [53, 84] },
+      db: [[56, 86, 0], [53, 84, 0]]
+    }
+  },
+  {
+    id: 'chest_squeeze_press',
+    name: 'Squeeze press',
+    group: 'chest',
+    sets: 3, reps: '10-15', tempo: 3.0,
+    desc: 'Both bells pressed while jammed together the whole set. The squeeze keeps the chest under tension end to end.',
+    muscles: { primary: ['chest'], secondary: ['triceps', 'frontDelt'] },
+    cues: ['Push the bells hard into each other', 'Never let them separate', 'Light weight, long sets'],
+    pose: {
+      props: BENCH_FLAT,
+      head: [40, 64], neck: [52, 68], hip: [86, 70],
+      near: { shoulder: [52, 68], elbow: [50, 52], hand: [53, 38], knee: [96, 92], foot: [102, 116] },
+      far:  { shoulder: [50, 66], elbow: [48, 50], hand: [52, 37], knee: [92, 94], foot: [98, 116] },
+      db: [[53, 38, 0], [52, 36, 0]]
+    },
+    end: {
+      near: { elbow: [46, 60], hand: [55, 53] },
+      far:  { elbow: [44, 58], hand: [54, 52] },
+      db: [[55, 53, 0], [54, 51, 0]]
+    }
+  },
+  {
+    id: 'back_chest_supported_row',
+    name: 'Chest supported row',
+    group: 'back',
+    sets: 3, reps: '10-12', tempo: 2.8,
+    desc: 'Face down on the incline bench so the lower back does nothing. Pure back work with no cheating.',
+    muscles: { primary: ['lats', 'traps'], secondary: ['rearDelt', 'biceps'] },
+    cues: ['Chest stays glued to the pad', 'Pull the elbows back and down', 'Pause at the top'],
+    pose: {
+      props: [FLOOR, { p1: [46, 50], p2: [80, 82] }, { p1: [80, 82], p2: [108, 84] }, { p1: [86, 84], p2: [86, 104] }],
+      head: [40, 40], neck: [52, 52], hip: [78, 80],
+      near: { shoulder: [52, 52], elbow: [56, 70], hand: [46, 58], knee: [96, 96], foot: [102, 116] },
+      far:  { shoulder: [50, 50], elbow: [54, 68], hand: [44, 56], knee: [92, 98], foot: [98, 116] },
+      db: [[46, 58, 0], [44, 56, 0]]
+    },
+    end: {
+      near: { elbow: [50, 72], hand: [52, 92] },
+      far:  { elbow: [48, 70], hand: [50, 90] },
+      db: [[52, 94, 0], [50, 92, 0]]
+    }
+  },
+  {
+    id: 'back_shrug',
+    name: 'Dumbbell shrug',
+    group: 'back',
+    sets: 3, reps: '12-15', tempo: 2.4,
+    desc: 'Heavy bells hanging at your sides while the shoulders lift straight up. All traps, no arms.',
+    muscles: { primary: ['traps'], secondary: ['forearm'] },
+    cues: ['Straight up, never rolling', 'Hold the top for a full second', 'Arms stay long and relaxed'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 34], hip: [70, 70],
+      near: { shoulder: [56, 38], elbow: [54, 58], hand: [53, 78], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [84, 38], elbow: [86, 58], hand: [87, 78], knee: [79, 92], foot: [81, 116] },
+      db: [[53, 80, 0], [87, 80, 0]]
+    },
+    end: {
+      neck: [70, 44],
+      near: { shoulder: [56, 52], elbow: [54, 72], hand: [53, 92] },
+      far:  { shoulder: [84, 52], elbow: [86, 72], hand: [87, 92] },
+      db: [[53, 94, 0], [87, 94, 0]]
+    }
+  },
+  {
+    id: 'shoulders_arnold',
+    name: 'Arnold press',
+    group: 'shoulders',
+    sets: 3, reps: '10-12', tempo: 3.0,
+    desc: 'Starts with the palms facing you at chest height and rotates open as you press. Hits front and side together.',
+    muscles: { primary: ['frontDelt', 'sideDelt'], secondary: ['triceps', 'traps'] },
+    cues: ['Rotate as you press, not before', 'Elbows finish under the wrists', 'Reverse the turn on the way down'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [48, 34], hand: [50, 16], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [92, 34], hand: [90, 16], knee: [79, 92], foot: [81, 116] },
+      db: [[50, 16, 0], [90, 16, 0]]
+    },
+    end: {
+      near: { elbow: [58, 52], hand: [64, 38] },
+      far:  { elbow: [82, 52], hand: [76, 38] },
+      db: [[62, 38, 90], [78, 38, 90]]
+    }
+  },
+  {
+    id: 'shoulders_front_raise',
+    name: 'Front raise',
+    group: 'shoulders',
+    sets: 3, reps: '12-15', tempo: 3.0,
+    desc: 'Straight arms lift the bells forward to eye level. Isolates the front of the shoulder.',
+    muscles: { primary: ['frontDelt'], secondary: ['abs'] },
+    cues: ['No leaning back', 'Stop at eye level', 'Light weight, this one exposes swinging'],
+    pose: {
+      props: [FLOOR],
+      head: [64, 22], neck: [64, 36], hip: [66, 70],
+      near: { shoulder: [62, 41], elbow: [78, 44], hand: [94, 44], knee: [62, 92], foot: [60, 116] },
+      far:  { shoulder: [60, 39], elbow: [76, 42], hand: [92, 42], knee: [72, 92], foot: [74, 116] },
+      db: [[96, 44, 0], [94, 42, 0]]
+    },
+    end: {
+      near: { elbow: [64, 58], hand: [65, 78] },
+      far:  { elbow: [62, 56], hand: [63, 76] },
+      db: [[65, 80, 0], [63, 78, 0]]
+    }
+  },
+  {
+    id: 'biceps_concentration_curl',
+    name: 'Concentration curl',
+    group: 'biceps',
+    sets: 3, reps: '10-12', tempo: 3.0,
+    desc: 'Seated with the working elbow braced against the inner thigh. Nothing can help the arm cheat.',
+    muscles: { primary: ['biceps'], secondary: ['forearm'] },
+    cues: ['Elbow stays wedged on the thigh', 'Curl to the shoulder, not the chin', 'One arm at a time'],
+    pose: {
+      props: [FLOOR, { p1: [50, 84], p2: [100, 84] }, { p1: [58, 84], p2: [58, 106] }, { p1: [92, 84], p2: [92, 106] }],
+      head: [54, 40], neck: [62, 52], hip: [84, 82],
+      near: { shoulder: [62, 52], elbow: [64, 72], hand: [55, 58], knee: [62, 86], foot: [56, 116] },
+      far:  { shoulder: [60, 50], elbow: [76, 68], hand: [86, 76], knee: [88, 88], foot: [92, 116] },
+      db: [[53, 57, 0]]
+    },
+    end: {
+      near: { elbow: [64, 72], hand: [66, 92] },
+      db: [[66, 94, 0]]
+    }
+  },
+  {
+    id: 'biceps_cross_body_curl',
+    name: 'Cross body curl',
+    group: 'biceps',
+    sets: 3, reps: '10-12', tempo: 2.8,
+    desc: 'One bell curls diagonally toward the opposite shoulder. Loads the outer head of the biceps harder.',
+    muscles: { primary: ['biceps', 'forearm'], secondary: [] },
+    cues: ['Travel across the body, not straight up', 'Palm stays neutral', 'Alternate arms every rep'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [55, 63], hand: [72, 46], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [85, 63], hand: [85, 84], knee: [79, 92], foot: [81, 116] },
+      db: [[74, 46, 90]]
+    },
+    end: {
+      near: { hand: [55, 84] },
+      db: [[54, 86, 90]]
+    }
+  },
+  {
+    id: 'triceps_close_grip_press',
+    name: 'Close grip press',
+    group: 'triceps',
+    sets: 3, reps: '10-12', tempo: 2.8,
+    desc: 'A bench press with the elbows tucked hard to the ribs, so the triceps do most of the work.',
+    muscles: { primary: ['triceps'], secondary: ['chest', 'frontDelt'] },
+    cues: ['Elbows brush the ribs the whole way', 'Bells stay close together', 'Lock out without slamming'],
+    pose: {
+      props: BENCH_FLAT,
+      head: [40, 64], neck: [52, 68], hip: [86, 70],
+      near: { shoulder: [52, 68], elbow: [54, 52], hand: [54, 38], knee: [96, 92], foot: [102, 116] },
+      far:  { shoulder: [50, 66], elbow: [52, 50], hand: [52, 36], knee: [92, 94], foot: [98, 116] },
+      db: [[54, 38, 0], [52, 36, 0]]
+    },
+    end: {
+      near: { elbow: [57, 64], hand: [56, 55] },
+      far:  { elbow: [55, 62], hand: [54, 53] },
+      db: [[56, 55, 0], [54, 53, 0]]
+    }
+  },
+  {
+    id: 'triceps_single_overhead',
+    name: 'Single arm overhead extension',
+    group: 'triceps',
+    sets: 3, reps: '10-12', tempo: 2.8,
+    desc: 'One bell behind the head, pressed straight up with one arm. Easier on the elbows than the two hand version.',
+    muscles: { primary: ['triceps'], secondary: ['abs'] },
+    cues: ['Free hand can steady the working elbow', 'Elbow points at the ceiling, not out', 'Full stretch at the bottom'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [59, 23], hand: [69, 38], knee: [61, 92], foot: [59, 116] },
+      far:  { shoulder: [83, 41], elbow: [85, 60], hand: [86, 80], knee: [79, 92], foot: [81, 116] },
+      db: [[71, 40, 90]]
+    },
+    end: {
+      near: { elbow: [59, 23], hand: [57, 12] },
+      db: [[56, 10, 90]]
+    }
+  },
+  {
+    id: 'legs_bulgarian_split_squat',
+    name: 'Bulgarian split squat',
+    group: 'legs',
+    sets: 3, reps: '8 each side', tempo: 3.4,
+    desc: 'Back foot up on the bench, all the load on the front leg. The hardest thing you can do with two dumbbells.',
+    muscles: { primary: ['quads', 'glutes'], secondary: ['hamstrings', 'abs'] },
+    cues: ['Front foot far enough forward that the knee stays over the ankle', 'Drop straight down', 'Do the weak leg first'],
+    pose: {
+      props: [FLOOR, { p1: [86, 80], p2: [128, 80] }, { p1: [96, 80], p2: [96, 104] }],
+      head: [56, 34], neck: [58, 48], hip: [62, 82],
+      near: { shoulder: [50, 53], elbow: [48, 70], hand: [47, 90], knee: [50, 96], foot: [48, 116] },
+      far:  { shoulder: [66, 53], elbow: [68, 70], hand: [69, 90], knee: [84, 92], foot: [98, 78] },
+      db: [[47, 92, 0], [69, 92, 0]]
+    },
+    end: {
+      head: [56, 12], neck: [58, 26], hip: [62, 60],
+      near: { shoulder: [50, 31], elbow: [48, 48], hand: [47, 68], knee: [54, 88], foot: [50, 116] },
+      far:  { shoulder: [66, 31], elbow: [68, 48], hand: [69, 68], knee: [84, 76], foot: [98, 78] },
+      db: [[47, 70, 0], [69, 70, 0]]
+    }
+  },
+  {
+    id: 'legs_step_up',
+    name: 'Dumbbell step up',
+    group: 'legs',
+    sets: 3, reps: '10 each side', tempo: 3.4,
+    desc: 'Step up onto the bench driving through the top foot. The trailing leg does nothing but come along.',
+    muscles: { primary: ['quads', 'glutes'], secondary: ['hamstrings', 'calves'] },
+    cues: ['Whole foot on the bench', 'Push through the heel, do not hop off the back foot', 'Lower under control'],
+    pose: {
+      props: [FLOOR, { p1: [80, 84], p2: [128, 84] }, { p1: [90, 84], p2: [90, 110] }],
+      head: [58, 24], neck: [60, 38], hip: [64, 72],
+      near: { shoulder: [52, 43], elbow: [50, 60], hand: [49, 80], knee: [82, 66], foot: [92, 84] },
+      far:  { shoulder: [68, 43], elbow: [70, 60], hand: [71, 80], knee: [58, 92], foot: [54, 116] },
+      db: [[49, 82, 0], [71, 82, 0]]
+    },
+    end: {
+      head: [66, 14], neck: [68, 28], hip: [74, 62],
+      near: { shoulder: [62, 33], elbow: [60, 50], hand: [59, 70], knee: [86, 72], foot: [92, 84] },
+      far:  { shoulder: [78, 33], elbow: [80, 50], hand: [81, 70], knee: [66, 84], foot: [60, 108] },
+      db: [[59, 72, 0], [81, 72, 0]]
+    }
+  },
+  {
+    id: 'core_leg_raise',
+    name: 'Weighted leg raise',
+    group: 'core',
+    sets: 3, reps: '10-12', tempo: 3.0,
+    desc: 'Flat on the floor with a bell pinched between the feet, the legs lift and lower without touching down.',
+    muscles: { primary: ['abs'], secondary: ['quads', 'obliques'] },
+    cues: ['Hands under the hips if the back arches', 'Lower until it is hard, then stop', 'Feet never rest on the floor'],
+    pose: {
+      props: [FLOOR],
+      head: [26, 98], neck: [40, 100], hip: [80, 104],
+      near: { shoulder: [40, 100], elbow: [32, 108], hand: [26, 112], knee: [98, 88], foot: [114, 78] },
+      far:  { shoulder: [43, 103], elbow: [35, 111], hand: [29, 115], knee: [101, 91], foot: [117, 81] },
+      db: [[118, 76, 90]]
+    },
+    end: {
+      near: { knee: [104, 100], foot: [122, 104] },
+      far:  { knee: [107, 103], foot: [125, 107] },
+      db: [[126, 104, 90]]
+    }
+  },
+  {
+    id: 'core_overhead_march',
+    name: 'Overhead march',
+    group: 'core',
+    sets: 3, reps: '20 steps', tempo: 2.2,
+    desc: 'One bell locked out overhead while you march the knees up. Everything in the trunk fires to stop you tipping.',
+    muscles: { primary: ['abs', 'obliques'], secondary: ['frontDelt', 'lowerBack'] },
+    cues: ['Elbow locked, bicep by the ear', 'Knee up to hip height', 'Ribs down, do not lean away from the bell'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 22], neck: [70, 36], hip: [70, 70],
+      near: { shoulder: [57, 41], elbow: [55, 26], hand: [56, 12], knee: [52, 74], foot: [44, 92] },
+      far:  { shoulder: [83, 41], elbow: [85, 60], hand: [86, 80], knee: [80, 92], foot: [82, 116] },
+      db: [[55, 10, 90], [86, 82, 0]]
+    },
+    end: {
+      near: { knee: [61, 92], foot: [59, 116] },
+      far:  { knee: [80, 74], foot: [88, 92] }
+    }
+  }
+];
+
+const byId = id => EXERCISES.find(e => e.id === id);
+const byGroup = g => EXERCISES.filter(e => e.group === g);
+
+
+/* ===== muscles.js ===== */
+/* Targeted muscle infographic. Front and back body maps side by side.
+   Regions are plain shapes. Primary lights up solid, secondary lights up faint. */
+
+const MUSCLE_NAMES = {
+  chest: 'Chest', frontDelt: 'Front shoulder', sideDelt: 'Side shoulder', rearDelt: 'Rear shoulder',
+  biceps: 'Biceps', triceps: 'Triceps', forearm: 'Forearms', abs: 'Abs', obliques: 'Obliques',
+  lats: 'Lats', traps: 'Traps', lowerBack: 'Lower back', glutes: 'Glutes',
+  hamstrings: 'Hamstrings', quads: 'Quads', calves: 'Calves'
+};
+
+/* [shape, ...args] where shape is r = rounded rect (x,y,w,h,r) or e = ellipse (cx,cy,rx,ry) */
+const MUSCLE_SHAPES = {
+  chest:      [['r', 39, 27, 11, 12, 3], ['r', 54, 27, 11, 12, 3]],
+  frontDelt:  [['e', 35, 29, 5.5, 6.5], ['e', 69, 29, 5.5, 6.5]],
+  sideDelt:   [['e', 31, 27, 4, 5.5], ['e', 73, 27, 4, 5.5]],
+  biceps:     [['r', 28, 36, 8, 15, 4], ['r', 68, 36, 8, 15, 4]],
+  forearm:    [['r', 27, 52, 7, 15, 3.5], ['r', 70, 52, 7, 15, 3.5]],
+  abs:        [['r', 46, 41, 12, 17, 3]],
+  obliques:   [['r', 38, 42, 6, 15, 3], ['r', 60, 42, 6, 15, 3]],
+  quads:      [['r', 40, 70, 10, 23, 5], ['r', 54, 70, 10, 23, 5]],
+
+  traps:      [['r', 138, 21, 20, 13, 5]],
+  rearDelt:   [['e', 131, 29, 5.5, 6.5], ['e', 165, 29, 5.5, 6.5]],
+  lats:       [['r', 134, 34, 11, 19, 3], ['r', 151, 34, 11, 19, 3]],
+  lowerBack:  [['r', 141, 52, 14, 9, 3]],
+  triceps:    [['r', 124, 36, 8, 15, 4], ['r', 164, 36, 8, 15, 4]],
+  glutes:     [['r', 135, 61, 11, 12, 5], ['r', 150, 61, 11, 12, 5]],
+  hamstrings: [['r', 136, 74, 10, 19, 5], ['r', 150, 74, 10, 19, 5]],
+  calves:     [['r', 137, 94, 8, 16, 4], ['r', 151, 94, 8, 16, 4]]
+};
+
+const BODY_BASE = [
+  /* front */
+  ['c', 52, 13, 7.5], ['r', 49, 19, 6, 6, 2], ['r', 34, 24, 36, 36, 6], ['r', 40, 56, 24, 14, 4],
+  ['r', 28, 30, 8, 38, 4], ['r', 68, 30, 8, 38, 4],
+  ['r', 40, 68, 10, 26, 5], ['r', 54, 68, 10, 26, 5],
+  ['r', 41, 92, 8, 20, 4], ['r', 55, 92, 8, 20, 4],
+  /* back */
+  ['c', 148, 13, 7.5], ['r', 145, 19, 6, 6, 2], ['r', 130, 24, 36, 36, 6], ['r', 136, 56, 24, 14, 4],
+  ['r', 124, 30, 8, 38, 4], ['r', 164, 30, 8, 38, 4],
+  ['r', 136, 68, 10, 26, 5], ['r', 150, 68, 10, 26, 5],
+  ['r', 137, 92, 8, 20, 4], ['r', 151, 92, 8, 20, 4]
+];
+
+function shapeSVG(s, cls) {
+  if (s[0] === 'c') return `<circle cx="${s[1]}" cy="${s[2]}" r="${s[3]}" class="${cls}"/>`;
+  if (s[0] === 'e') return `<ellipse cx="${s[1]}" cy="${s[2]}" rx="${s[3]}" ry="${s[4]}" class="${cls}"/>`;
+  return `<rect x="${s[1]}" y="${s[2]}" width="${s[3]}" height="${s[4]}" rx="${s[5]}" class="${cls}"/>`;
+}
+
+function muscleMap(muscles) {
+  const primary = muscles.primary || [];
+  const secondary = muscles.secondary || [];
+  const base = BODY_BASE.map(s => shapeSVG(s, 'mm-base')).join('');
+
+  const paint = (list, cls) => list
+    .flatMap(m => (MUSCLE_SHAPES[m] || []).map(s => shapeSVG(s, cls)))
+    .join('');
+
+  const named = primary.map(m => MUSCLE_NAMES[m] || m).join(', ');
+  const alsoNamed = secondary.map(m => MUSCLE_NAMES[m] || m).join(', ');
+
+  return `
+    <div class="mmap">
+      <svg viewBox="20 2 156 120" class="mmap-svg" role="img"
+           aria-label="Muscles worked: ${named}${alsoNamed ? '. Also: ' + alsoNamed : ''}">
+        ${base}
+        ${paint(secondary, 'mm-second')}
+        ${paint(primary, 'mm-first')}
+        <text x="52" y="119" class="mm-cap">front</text>
+        <text x="148" y="119" class="mm-cap">back</text>
+      </svg>
+      <div class="mmap-key">
+        <p class="mm-line"><span class="mm-dot is-first"></span>${named}</p>
+        ${alsoNamed ? `<p class="mm-line"><span class="mm-dot is-second"></span>${alsoNamed}</p>` : ''}
+      </div>
+    </div>`;
+}
+
+
+/* ===== figure.js ===== */
+/* Draws an exercise as an SVG figure and animates it between its two poses.
+   One requestAnimationFrame loop drives every figure on the page. */
+
+const JOINT_LINES = [
+  ['far', 'shoulder', 'elbow'], ['far', 'elbow', 'hand'],
+  ['far', 'hip', 'knee'], ['far', 'knee', 'foot'],
+  ['near', 'shoulder', 'elbow'], ['near', 'elbow', 'hand'],
+  ['near', 'hip', 'knee'], ['near', 'knee', 'foot']
+];
+
+function mergePose(base, over) {
+  if (!over) return base;
+  const out = {
+    props: base.props,
+    head: over.head || base.head,
+    neck: over.neck || base.neck,
+    hip: over.hip || base.hip,
+    near: Object.assign({}, base.near, over.near || {}),
+    far: Object.assign({}, base.far, over.far || {}),
+    db: over.db || base.db
+  };
+  return out;
+}
+
+const lerp = (a, b, t) => a + (b - a) * t;
+const lerpPt = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+
+function poseAt(ex, t) {
+  const a = ex.pose;
+  const b = mergePose(ex.pose, ex.end);
+  const side = s => {
+    const o = {};
+    ['shoulder', 'elbow', 'hand', 'knee', 'foot'].forEach(j => {
+      if (a[s][j]) o[j] = lerpPt(a[s][j], b[s][j] || a[s][j], t);
+    });
+    return o;
+  };
+  return {
+    props: a.props,
+    head: lerpPt(a.head, b.head, t),
+    neck: lerpPt(a.neck, b.neck, t),
+    hip: lerpPt(a.hip, b.hip, t),
+    near: side('near'),
+    far: side('far'),
+    db: a.db.map((d, i) => {
+      const e = (b.db && b.db[i]) || d;
+      return [lerp(d[0], e[0], t), lerp(d[1], e[1], t), lerp(d[2] || 0, e[2] || 0, t)];
+    })
+  };
+}
+
+function figureSVG(ex, opts) {
+  const o = opts || {};
+  const p = ex.pose;
+  const props = (p.props || [])
+    .map(q => `<line x1="${q.p1[0]}" y1="${q.p1[1]}" x2="${q.p2[0]}" y2="${q.p2[1]}" class="fig-prop" stroke-width="7"/>`)
+    .join('');
+
+  const limbs = JOINT_LINES.map(([side, from, to]) => {
+    if (!p[side][to]) return '';
+    const cls = side === 'near' ? 'fig-near' : 'fig-far';
+    const w = side === 'near' ? 5.5 : 5;
+    return `<line data-j="${side}.${from}.${to}" class="${cls}" stroke-width="${w}" x1="0" y1="0" x2="0" y2="0"/>`;
+  }).join('');
+
+  const bells = p.db
+    .map((d, i) => `<g data-db="${i}" class="fig-bell">
+      <rect x="-7" y="-1.4" width="14" height="2.8" rx="1.2"/>
+      <rect x="-11.5" y="-5" width="5" height="10" rx="1.6"/>
+      <rect x="6.5" y="-5" width="5" height="10" rx="1.6"/>
+    </g>`).join('');
+
+  return `<svg viewBox="0 0 140 124" class="figure" data-ex="${ex.id}" data-phase="${o.phase || 0}"
+    role="img" aria-label="${ex.name} technique" xmlns="http://www.w3.org/2000/svg">
+    ${props}
+    ${limbs.replace(/data-j="far/g, 'data-j="far')}
+    <line data-j="torso.far" class="fig-far" stroke-width="5" x1="0" y1="0" x2="0" y2="0"/>
+    <line data-j="torso.near" class="fig-torso" stroke-width="8" x1="0" y1="0" x2="0" y2="0"/>
+    <circle data-j="head" class="fig-head" r="8" cx="0" cy="0"/>
+    ${bells}
+  </svg>`;
+}
+
+/* ---------- animation loop ---------- */
+
+function paintFigure(svg, ex, t) {
+  const p = poseAt(ex, t);
+  svg.querySelectorAll('[data-j]').forEach(el => {
+    const j = el.dataset.j;
+    if (j === 'head') { el.setAttribute('cx', p.head[0]); el.setAttribute('cy', p.head[1]); return; }
+    if (j === 'torso.near' || j === 'torso.far') {
+      el.setAttribute('x1', p.neck[0]); el.setAttribute('y1', p.neck[1]);
+      el.setAttribute('x2', p.hip[0]); el.setAttribute('y2', p.hip[1]);
+      return;
+    }
+    const [side, from, to] = j.split('.');
+    const a = from === 'hip' ? p.hip : p[side][from];
+    const b = p[side][to];
+    if (!a || !b) return;
+    el.setAttribute('x1', a[0]); el.setAttribute('y1', a[1]);
+    el.setAttribute('x2', b[0]); el.setAttribute('y2', b[1]);
+  });
+  svg.querySelectorAll('[data-db]').forEach(g => {
+    const d = p.db[Number(g.dataset.db)];
+    if (d) g.setAttribute('transform', `translate(${d[0].toFixed(2)} ${d[1].toFixed(2)}) rotate(${d[2].toFixed(2)})`);
+  });
+}
+
+let animating = false;
+
+function tickFigures(now) {
+  const svgs = document.querySelectorAll('svg.figure');
+  svgs.forEach(svg => {
+    const ex = byId(svg.dataset.ex);
+    if (!ex) return;
+    const period = (ex.tempo || 2.8) * 1000;
+    const phase = Number(svg.dataset.phase) || 0;
+    const u = (((now / period) + phase) % 1 + 1) % 1;
+    paintFigure(svg, ex, (1 - Math.cos(2 * Math.PI * u)) / 2);
+  });
+  requestAnimationFrame(tickFigures);
+}
+
+function startFigureLoop() {
+  if (animating || typeof requestAnimationFrame !== 'function') return;
+  animating = true;
+  requestAnimationFrame(tickFigures);
+}
+
+
+/* ===== sync.js ===== */
+/* Talks to the Google Apps Script web app.
+   Everything is written locally first, then pushed. Nothing is lost if the phone drops signal. */
+
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbzQjg4Y9UtO5RPVnd6PvoAlVgOFznJHgZI3vCRGfXoGYg1nCDz6qM72_gSOZMVWG8Yi/exec';
+
+const store = {
+  get(k, fallback) {
+    try { const v = localStorage.getItem('rack.' + k); return v === null ? fallback : JSON.parse(v); }
+    catch (e) { return fallback; }
+  },
+  set(k, v) {
+    try { localStorage.setItem('rack.' + k, JSON.stringify(v)); } catch (e) { /* private mode */ }
+  }
+};
+
+const sync = {
+  status: 'idle',           // idle | sending | queued | offline
+  onchange: null,
+
+  queue() { return store.get('queue', []); },
+
+  push(record) {
+    const q = this.queue();
+    q.push(Object.assign({ athlete: ATHLETE, at: new Date().toISOString() }, record));
+    store.set('queue', q);
+    this.flush();
+  },
+
+  async flush() {
+    if (this.status === 'sending') return;
+    let q = this.queue();
+    if (!q.length) { this.set('idle'); return; }
+    this.set('sending');
+    while (q.length) {
+      const ok = await this.send(q[0]);
+      if (!ok) { this.set('queued'); return; }
+      q = this.queue().slice(1);
+      store.set('queue', q);
+    }
+    this.set('idle');
+  },
+
+  async send(record) {
+    try {
+      const res = await fetch(SYNC_URL, {
+        method: 'POST',
+        // text/plain keeps the browser from sending a preflight Apps Script cannot answer
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(record),
+        redirect: 'follow'
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  set(s) {
+    this.status = s;
+    if (this.onchange) this.onchange(s);
+  },
+
+  label() {
+    const n = this.queue().length;
+    if (this.status === 'sending') return 'Saving';
+    if (n) return n + ' to sync';
+    return 'Saved';
+  }
+};
+
+window.addEventListener('online', () => sync.flush());
+
+
+/* ===== runner.js ===== */
+/* The workout runner. One exercise at a time, three sets, rest between them.
+   The session clock starts on the first Start and never pauses, rests included. */
+
+const WORK_SEC_PER_SET = 40;      // used only for the time estimate
+const TRANSITION_SEC = 75;        // walking over, changing the bench, picking bells
+const GRACE_SEC = 300;            // bathroom, water, someone using your rack
+
+const MOTIVATION = [
+  'You got this', 'One set at a time', 'Own the last two reps', 'Slow on the way down',
+  'Breathe, then go', 'Nobody is coming to lift it for you', 'This is the easy part',
+  'Full range, every rep', 'Stay tight', 'Finish what you started', 'Better than yesterday',
+  'The bells do not care how you feel'
+];
+
+function estimateSeconds(items) {
+  let sec = 0;
+  items.forEach(e => {
+    sec += e.sets * WORK_SEC_PER_SET;
+    sec += (e.sets - 1) * GROUPS[e.group].rest;
+    sec += TRANSITION_SEC;
+  });
+  return sec + GRACE_SEC;
+}
+
+function humanMinutes(sec) {
+  const m = Math.round(sec / 60 / 5) * 5;
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m / 60), r = m % 60;
+  return r ? `${h}h ${r}m` : `${h}h`;
+}
+
+function clock(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60;
+  const pad = n => String(n).padStart(2, '0');
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
+/* ---------- session ---------- */
+
+const session = {
+  data: null,
+
+  load() { this.data = store.get('active', null); return this.data; },
+  save() { store.set('active', this.data); },
+
+  start(dateKey, plan, order, startIdx) {
+    this.data = {
+      dateKey,
+      mark: plan.mark,
+      title: plan.title,
+      groups: plan.groups,
+      order: (order && order.length ? order.slice() : plan.groups.flatMap(byGroup).map(e => e.id)),
+      idx: Math.min(Math.max(0, startIdx || 0), (order || []).length ? order.length - 1 : 0),
+      phase: 'proposed',        // proposed | set | rest | done
+      setsDone: 0,
+      restEndsAt: null,
+      startedAt: Date.now(),
+      logged: []
+    };
+    this.save();
+  },
+
+  get exercise() { return byId(this.data.order[this.data.idx]); },
+  get elapsed() { return (Date.now() - this.data.startedAt) / 1000; },
+  get totalSets() { return this.data.order.reduce((n, id) => n + byId(id).sets, 0); },
+  get doneSets() { return this.data.logged.length; },
+
+  weight(id) {
+    const w = store.get('weights', {});
+    return w[id] || 20;
+  },
+  setWeight(id, lb) {
+    const w = store.get('weights', {});
+    w[id] = Math.min(MAX_DUMBBELL, Math.max(WEIGHT_STEP, lb));
+    store.set('weights', w);
+  },
+
+  motivation() {
+    return MOTIVATION[Math.floor(this.elapsed / 25) % MOTIVATION.length];
+  },
+
+  accept() { this.data.phase = 'set'; this.save(); },
+
+  swap() {
+    const ex = this.exercise;
+    const used = new Set(this.data.order);
+    const alt = byGroup(ex.group).find(e => !used.has(e.id));
+    if (!alt) return false;
+    this.data.order[this.data.idx] = alt.id;
+    this.data.setsDone = 0;
+    this.save();
+    return true;
+  },
+
+  logSet(ex, marked) {
+    this.data.setsDone++;
+    const entry = {
+      exerciseId: ex.id, exerciseName: ex.name, group: ex.group,
+      set: this.data.setsDone, reps: ex.reps, weight: this.weight(ex.id),
+      elapsedSec: Math.round(this.elapsed), marked: marked ? 'marked done' : ''
+    };
+    this.data.logged.push(entry);
+    sync.push(Object.assign({ type: 'set', dateKey: this.data.dateKey, sessionTitle: this.data.title }, entry));
+  },
+
+  /* Mark the whole exercise done and move on. Logs every set still outstanding. */
+  completeExercise() {
+    const ex = this.exercise;
+    while (this.data.setsDone < ex.sets) this.logSet(ex, true);
+    this.nextExercise();
+    this.save();
+  },
+
+  completeSet() {
+    const ex = this.exercise;
+    this.logSet(ex, false);
+
+    if (this.data.setsDone >= ex.sets) {
+      this.nextExercise();
+    } else {
+      this.data.phase = 'rest';
+      this.data.restEndsAt = Date.now() + GROUPS[ex.group].rest * 1000;
+    }
+    this.save();
+  },
+
+  nextExercise() {
+    this.data.idx++;
+    this.data.setsDone = 0;
+    this.data.restEndsAt = null;
+    this.data.phase = this.data.idx >= this.data.order.length ? 'done' : 'proposed';
+    if (this.data.phase === 'done') this.finish();
+    this.save();
+  },
+
+  skipExercise() { this.nextExercise(); },
+
+  addRest(sec) {
+    if (this.data.restEndsAt) { this.data.restEndsAt += sec * 1000; this.save(); }
+  },
+
+  skipRest() {
+    this.data.phase = 'set';
+    this.data.restEndsAt = null;
+    this.save();
+  },
+
+  restLeft() {
+    return this.data.restEndsAt ? (this.data.restEndsAt - Date.now()) / 1000 : 0;
+  },
+
+  finish() {
+    const d = this.data;
+    const durationSec = Math.round((Date.now() - d.startedAt) / 1000);
+    const log = store.get('log', {});
+    log[d.dateKey] = {
+      title: d.title, mark: d.mark, groups: d.groups,
+      durationSec, sets: d.logged.length,
+      exercises: [...new Set(d.logged.map(l => l.exerciseName))],
+      finishedAt: new Date().toISOString()
+    };
+    store.set('log', log);
+    sync.push({
+      type: 'session', dateKey: d.dateKey, title: d.title, groups: d.groups.join('|'),
+      durationSec, sets: d.logged.length,
+      exercises: [...new Set(d.logged.map(l => l.exerciseName))].join('|')
+    });
+  },
+
+  abandon() {
+    if (this.data && this.data.logged.length) this.finish();
+    this.data = null;
+    store.set('active', null);
+  }
+};
+
+
+/* ===== app.js ===== */
+/* Rack. Schedule, dates, editing, screens. */
+
+const DEFAULT_SPLITS = {
+  3: [
+    { mark: 'A', title: 'Pull', groups: ['biceps', 'back'], weekday: 1 },
+    { mark: 'B', title: 'Push', groups: ['chest', 'shoulders', 'triceps'], weekday: 3 },
+    { mark: 'C', title: 'Legs and core', groups: ['legs', 'core'], weekday: 5 }
+  ],
+  5: [
+    { mark: '1', title: 'Arms', groups: ['biceps', 'triceps'], weekday: 1 },
+    { mark: '2', title: 'Chest', groups: ['chest'], weekday: 2 },
+    { mark: '3', title: 'Back', groups: ['back'], weekday: 3 },
+    { mark: '4', title: 'Shoulders', groups: ['shoulders'], weekday: 4 },
+    { mark: '5', title: 'Legs and core', groups: ['legs', 'core'], weekday: 5 }
+  ]
+};
+
+const PER_GROUP = { 3: 3, 5: 4 };
+const GROUP_PRIORITY = ['biceps', 'back', 'chest', 'shoulders', 'triceps', 'legs', 'core'];
+const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const state = {
+  split: store.get('split', 3) === 5 ? 5 : 3,
+  selected: null,
+  exercise: null,
+  detailFrom: null,
+  screen: 'home',
+  moving: false,
+  history: null
+};
+
+/* ---------- dates ---------- */
+
+const isoDay = d => ((d.getDay() + 6) % 7) + 1;
+const key = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+function today() { const d = new Date(); d.setHours(12, 0, 0, 0); return d; }
+function viewedDate() { return state.selected ? new Date(state.selected + 'T12:00:00') : today(); }
+function weekOf(d) { const s = addDays(d, -(isoDay(d) - 1)); return Array.from({ length: 7 }, (_, i) => addDays(s, i)); }
+
+const fmtLong = d => d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtShort = d => d.toLocaleDateString(undefined, { weekday: 'long' });
+
+/* ---------- the editable week ---------- */
+
+function defaultPlanMap(n) {
+  const m = {};
+  DEFAULT_SPLITS[n].forEach(s => { m[s.weekday] = { mark: s.mark, title: s.title, groups: s.groups.slice() }; });
+  return m;
+}
+
+function plans() {
+  const p = store.get('plans', {}) || {};
+  let dirty = false;
+  [3, 5].forEach(n => { if (!p[n]) { p[n] = defaultPlanMap(n); dirty = true; } });
+  if (dirty) store.set('plans', p);
+  return p;
+}
+
+function scheduledFor(date) { return plans()[state.split][isoDay(date)] || null; }
+
+function sessionFor(date) {
+  return store.get('overrides', {})[key(date)] || scheduledFor(date);
+}
+
+function resetWeek() {
+  const p = plans();
+  p[state.split] = defaultPlanMap(state.split);
+  store.set('plans', p);
+  const o = store.get('orders', {});
+  Object.keys(o).forEach(k => { if (k.indexOf('s' + state.split) === 0) delete o[k]; });
+  store.set('orders', o);
+}
+
+function swapDays(wdA, wdB) {
+  if (wdA === wdB) return;
+  const p = plans();
+  const map = p[state.split];
+  const a = map[wdA] || null, b = map[wdB] || null;
+  if (b) map[wdA] = b; else delete map[wdA];
+  if (a) map[wdB] = a; else delete map[wdB];
+  store.set('plans', p);
+
+  const o = store.get('orders', {});
+  const ka = `s${state.split}w${wdA}`, kb = `s${state.split}w${wdB}`;
+  const oa = o[ka], ob = o[kb];
+  if (ob) o[ka] = ob; else delete o[ka];
+  if (oa) o[kb] = oa; else delete o[kb];
+  store.set('orders', o);
+}
+
+/* ---------- the editable exercise order ---------- */
+
+function orderKey(date) {
+  return store.get('overrides', {})[key(date)] ? 'd:' + key(date) : `s${state.split}w${isoDay(date)}`;
+}
+
+function defaultOrder(plan) {
+  const n = PER_GROUP[state.split] || 3;
+  return plan.groups.flatMap(g => byGroup(g).slice(0, n).map(e => e.id));
+}
+
+function orderFor(date) {
+  const plan = sessionFor(date);
+  if (!plan) return [];
+  const saved = store.get('orders', {})[orderKey(date)];
+  if (Array.isArray(saved) && saved.length && saved.every(id => byId(id))) return saved;
+  return defaultOrder(plan);
+}
+
+function setOrder(date, ids) {
+  const o = store.get('orders', {});
+  o[orderKey(date)] = ids;
+  store.set('orders', o);
+}
+
+function replaceAt(date, i) {
+  const ids = orderFor(date).slice();
+  const cur = byId(ids[i]);
+  const pool = byGroup(cur.group);
+  const start = pool.findIndex(e => e.id === cur.id);
+  for (let k = 1; k <= pool.length; k++) {
+    const cand = pool[(start + k) % pool.length];
+    if (!ids.includes(cand.id)) { ids[i] = cand.id; setOrder(date, ids); return true; }
+  }
+  return false;
+}
+
+function moveAt(date, i, dir) {
+  const ids = orderFor(date).slice();
+  const j = i + dir;
+  if (j < 0 || j >= ids.length) return;
+  const t = ids[i]; ids[i] = ids[j]; ids[j] = t;
+  setOrder(date, ids);
+}
+
+/* ---------- activation ---------- */
+
+function trainedThisWeek(date) {
+  const log = store.get('log', {});
+  const done = new Set();
+  weekOf(date).forEach(d => { const r = log[key(d)]; if (r) (r.groups || []).forEach(g => done.add(g)); });
+  return done;
+}
+
+function suggestGroups(date) {
+  const done = trainedThisWeek(date);
+  const open = GROUP_PRIORITY.filter(g => !done.has(g));
+  if (open.length >= 2) return open.slice(0, 2);
+  if (open.length === 1) return open;
+  return ['biceps', 'back'];
+}
+
+function activateDay(dateKey) {
+  const groups = suggestGroups(new Date(dateKey + 'T12:00:00'));
+  const o = store.get('overrides', {});
+  o[dateKey] = { mark: '+', title: groups.map(g => GROUPS[g].name).join(' and '), groups, activated: true };
+  store.set('overrides', o);
+}
+
+function deactivateDay(dateKey) {
+  const o = store.get('overrides', {});
+  delete o[dateKey];
+  store.set('overrides', o);
+  const ord = store.get('orders', {});
+  delete ord['d:' + dateKey];
+  store.set('orders', ord);
+}
+
+function nextTrainingDay(from) {
+  for (let i = 1; i <= 7; i++) {
+    const d = addDays(from, i);
+    if (sessionFor(d)) return { date: d, session: sessionFor(d) };
+  }
+  return null;
+}
+
+/* ---------- screen wake lock ---------- */
+
+let wakeLock = null;
+
+async function holdScreen() {
+  try {
+    if (navigator.wakeLock && !wakeLock) wakeLock = await navigator.wakeLock.request('screen');
+  } catch (e) { /* unsupported or refused, not worth telling anyone */ }
+}
+
+function releaseScreen() {
+  if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
+}
+
+/* ---------- render ---------- */
+
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function render() {
+  if (state.screen === 'run' && session.data) app.innerHTML = runView();
+  else if (state.screen === 'history') app.innerHTML = historyView();
+  else if (state.screen === 'detail') app.innerHTML = detailView();
+  else app.innerHTML = homeView();
+  bind();
+  startFigureLoop();
+}
+
+function welcomeBar() {
+  const live = session.data && session.data.phase !== 'done';
+  return `
+    <header class="welcome">
+      <p class="hello">Welcome, ${esc(ATHLETE)}</p>
+      ${live ? `<div class="live">
+          <span class="live-clock" id="elapsed">${clock(session.elapsed)}</span>
+          <span class="live-msg" id="motivate">${esc(session.motivation())}</span>
+        </div>` : `<p class="sync-state" id="syncstate">${esc(sync.label())}</p>`}
+    </header>`;
+}
+
+/* ---------- home ---------- */
+
+function homeView() {
+  const d = viewedDate();
+  const plan = sessionFor(d);
+  const isToday = key(d) === key(today());
+  const logged = store.get('log', {})[key(d)];
+
+  return `
+    ${welcomeBar()}
+    <div class="masthead">
+      <div class="wordmark">Rack</div>
+      <button class="datestamp" data-history="1">${esc(fmtLong(d))}${isToday ? '' : ' &middot; not today'}</button>
+    </div>
+    ${session.data && session.data.phase !== 'done' ? resumeBar() : ''}
+    ${logged ? doneCard(logged) : (plan ? heroTraining(d, plan) : heroRest(d))}
+    ${state.moving ? dayMover(d) : ''}
+    ${splitSwitch()}
+    ${weekStrip(d)}
+    ${plan && !logged ? exerciseList(d) : ''}`;
+}
+
+function resumeBar() {
+  return `<button class="resume" data-resume="1">
+    <span>Session in progress &middot; ${esc(session.data.title)}</span>
+    <span class="resume-go">Resume</span>
+  </button>`;
+}
+
+function doneCard(rec) {
+  return `<section class="hero is-done">
+    <div class="hero-mark">${esc(rec.mark || '+')}</div>
+    <h1 class="hero-title">${esc(rec.title)}</h1>
+    <p class="hero-count">Done in ${clock(rec.durationSec)} &middot; ${rec.sets} sets</p>
+    <p class="hero-groups">${esc((rec.exercises || []).join(', '))}</p>
+  </section>`;
+}
+
+function heroTraining(d, plan) {
+  const items = orderFor(d).map(byId);
+  const est = estimateSeconds(items);
+  const sets = items.reduce((n, e) => n + e.sets, 0);
+  const groups = plan.groups.map(g => GROUPS[g].name).join(', ');
+  const showGroups = groups.toLowerCase() !== plan.title.toLowerCase();
+  return `
+    <section class="hero">
+      <div class="hero-mark">${esc(plan.mark)}</div>
+      <h1 class="hero-title">${esc(plan.title)}</h1>
+      ${showGroups ? `<p class="hero-groups">${esc(groups)}</p>` : ''}
+      <p class="hero-count">${items.length} exercises &middot; ${sets} sets &middot; about ${humanMinutes(est)}</p>
+      <div class="hero-actions">
+        <button class="btn" data-start="${key(d)}">Start workout</button>
+        ${plan.activated
+          ? `<button class="btn btn-quiet" data-deactivate="${key(d)}">Clear</button>`
+          : `<button class="btn btn-quiet" data-move="1">Move day</button>`}
+      </div>
+    </section>`;
+}
+
+function heroRest(d) {
+  const next = nextTrainingDay(d);
+  const open = suggestGroups(d).map(g => GROUPS[g].name).join(' and ');
+  return `
+    <section class="hero is-rest">
+      <div class="hero-mark">Rest</div>
+      <h1 class="hero-title">Nothing scheduled</h1>
+      <p class="hero-groups">${next ? `Next up is ${esc(next.session.title)} on ${esc(fmtShort(next.date))}.` : ''}</p>
+      <p class="hero-count">Not trained this week yet: ${esc(open)}</p>
+      <div class="hero-actions">
+        <button class="btn" data-activate="${key(d)}">Activate this day</button>
+        <button class="btn btn-quiet" data-move="1">Move a day here</button>
+      </div>
+    </section>`;
+}
+
+function dayMover(d) {
+  const wd = isoDay(d);
+  const map = plans()[state.split];
+  const cells = WEEKDAY_NAMES.map((name, i) => {
+    const target = i + 1;
+    const p = map[target];
+    return `<button class="mover-day" ${target === wd ? 'disabled' : ''} data-swapday="${target}">
+      <span class="mv-name">${esc(name.slice(0, 3))}</span>
+      <span class="mv-what">${p ? esc(p.title) : 'Rest'}</span>
+    </button>`;
+  }).join('');
+  return `
+    <section class="mover">
+      <p class="mover-head">Swap ${esc(WEEKDAY_NAMES[wd - 1])} with which day?</p>
+      <div class="mover-grid">${cells}</div>
+      <div class="mover-foot">
+        <button class="linky" data-resetweek="1">Reset the week to defaults</button>
+        <button class="linky" data-move="0">Cancel</button>
+      </div>
+    </section>`;
+}
+
+function splitSwitch() {
+  const on = n => state.split === n;
+  const map = plans()[state.split];
+  const summary = Object.keys(map).sort()
+    .map(wd => `${WEEKDAY_NAMES[wd - 1].slice(0, 3)} ${map[wd].title}`).join(', ');
+  return `
+    <div class="switch" role="group" aria-label="Training days per week">
+      <button data-split="3" aria-pressed="${on(3)}">3 days a week</button>
+      <button data-split="5" aria-pressed="${on(5)}">5 days a week</button>
+    </div>
+    <p class="switch-note">${esc(summary)}.</p>`;
+}
+
+function weekStrip(viewed) {
+  const t = today(), log = store.get('log', {});
+  const cells = weekOf(viewed).map(d => {
+    const s = sessionFor(d);
+    const cls = ['week-day'];
+    if (!s) cls.push('is-rest');
+    if (log[key(d)]) cls.push('is-logged');
+    if (key(d) === key(t)) cls.push('is-today');
+    return `<button class="${cls.join(' ')}" aria-pressed="${key(d) === key(viewed)}" data-goto="${key(d)}">
+      <span class="wd">${esc(d.toLocaleDateString(undefined, { weekday: 'narrow' }))}</span>
+      <span class="wm">${s ? esc(s.mark) : '&middot;'}</span>
+    </button>`;
+  }).join('');
+  return `<nav class="week" aria-label="This week">${cells}</nav>`;
+}
+
+function exerciseList(d) {
+  const ids = orderFor(d);
+  const dk = key(d);
+  const rows = ids.map((id, i) => {
+    const e = byId(id);
+    return `<div class="card">
+      <button class="card-main" data-exercise="${e.id}" data-from="${dk}" data-idx="${i}">
+        <span class="card-thumb">${figureSVG(e, { phase: (i + 1) * 0.13 })}</span>
+        <span class="card-body">
+          <span class="card-tag">${i + 1} &middot; ${esc(GROUPS[e.group].name)}</span>
+          <h3>${esc(e.name)}</h3>
+          <p>${e.sets} sets &middot; ${esc(e.reps)} reps &middot; ${GROUPS[e.group].rest}s rest</p>
+        </span>
+      </button>
+      <div class="card-tools">
+        <button data-up="${i}" data-d="${dk}" ${i === 0 ? 'disabled' : ''} aria-label="Move up">&uarr;</button>
+        <button data-down="${i}" data-d="${dk}" ${i === ids.length - 1 ? 'disabled' : ''} aria-label="Move down">&darr;</button>
+        <button class="tool-wide" data-replace="${i}" data-d="${dk}">Replace</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="section-head"><h2>The session</h2><span>Tap to open, or reorder</span></div>${rows}`;
+}
+
+/* ---------- detail ---------- */
+
+function detailView() {
+  const e = byId(state.exercise);
+  const from = state.detailFrom;
+  const canStart = from && sessionFor(new Date(from + 'T12:00:00'));
+  const idx = canStart ? orderFor(new Date(from + 'T12:00:00')).indexOf(e.id) : -1;
+  return `
+    ${welcomeBar()}
+    <div class="detail">
+      <button class="back" data-back="1">&larr; Back</button>
+      <div class="detail-stage">${figureSVG(e, {})}</div>
+      <h1>${esc(e.name)}</h1>
+      <p class="detail-meta">${e.sets} sets &middot; ${esc(e.reps)} reps &middot; ${GROUPS[e.group].rest}s rest between sets</p>
+      <p class="desc">${esc(e.desc)}</p>
+      ${canStart ? `<div class="hero-actions">
+        <button class="btn" data-starthere="${from}" data-i="${idx}">Start the session here</button>
+        <button class="btn btn-quiet" data-replacehere="${idx}" data-d="${from}">Replace</button>
+      </div>` : ''}
+      ${muscleMap(e.muscles)}
+      <ul class="cues">${e.cues.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+    </div>`;
+}
+
+/* ---------- history ---------- */
+
+function historyView() {
+  const local = store.get('log', {});
+  const days = Object.keys(local).sort().reverse();
+  const remote = state.history;
+
+  const localRows = days.length ? days.map(k => {
+    const r = local[k];
+    return `<li class="hist">
+      <span class="hist-date">${esc(k)}</span>
+      <span class="hist-title">${esc(r.title)}</span>
+      <span class="hist-meta">${clock(r.durationSec)} &middot; ${r.sets} sets</span>
+    </li>`;
+  }).join('') : '<li class="hist hist-empty">Nothing logged on this device yet.</li>';
+
+  let remoteBlock;
+  if (remote === null) remoteBlock = '<p class="stage-note">Loading from your sheet.</p>';
+  else if (remote === 'error') remoteBlock = '<p class="stage-note">Could not reach the sheet. Check the Apps Script deployment is set to "Anyone".</p>';
+  else if (!remote.length) remoteBlock = '<p class="stage-note">The sheet has no sessions yet.</p>';
+  else remoteBlock = `<ul class="hists">${remote.slice().reverse().map(s => `<li class="hist">
+      <span class="hist-date">${esc(String(s.date).slice(0, 10))}</span>
+      <span class="hist-title">${esc(s.title || '')}</span>
+      <span class="hist-meta">${esc(String(s.duration || ''))} &middot; ${esc(String(s.sets || 0))} sets</span>
+    </li>`).join('')}</ul>`;
+
+  return `
+    ${welcomeBar()}
+    <div class="detail">
+      <button class="back" data-back="1">&larr; Back</button>
+      <h1>History</h1>
+      <p class="detail-meta">On this device</p>
+      <ul class="hists">${localRows}</ul>
+      <p class="detail-meta" style="margin-top:22px">From the sheet</p>
+      ${remoteBlock}
+    </div>`;
+}
+
+function loadHistory() {
+  state.history = null;
+  fetch(SYNC_URL + '?action=history')
+    .then(r => r.json())
+    .then(j => { state.history = (j && j.sessions) || []; if (state.screen === 'history') render(); })
+    .catch(() => { state.history = 'error'; if (state.screen === 'history') render(); });
+}
+
+/* ---------- runner ---------- */
+
+function runView() {
+  const d = session.data;
+  if (d.phase === 'done') return doneView();
+  const ex = session.exercise;
+  const setNo = Math.min(d.setsDone + 1, ex.sets);
+  const pct = Math.round((session.doneSets / session.totalSets) * 100);
+
+  return `
+    ${welcomeBar()}
+    <div class="run">
+      <div class="run-top">
+        <button class="back" data-exit="1">&larr; Leave</button>
+        <span class="run-pos">Exercise ${d.idx + 1} of ${d.order.length}</span>
+      </div>
+      <div class="bar"><span style="width:${pct}%"></span></div>
+      <p class="bar-note">${session.doneSets} of ${session.totalSets} sets done in this session</p>
+      <div class="detail-stage">${figureSVG(ex, {})}</div>
+      <h1 class="run-name">${esc(ex.name)}</h1>
+      ${d.phase === 'proposed' ? proposedBlock(ex) : ''}
+      ${d.phase === 'set' ? setBlock(ex, setNo) : ''}
+      ${d.phase === 'rest' ? restBlock(ex, setNo) : ''}
+    </div>`;
+}
+
+function weightPicker(ex) {
+  const w = session.weight(ex.id);
+  return `<div class="weight">
+    <button data-weight="-1" aria-label="Lower the weight">&minus;</button>
+    <span><strong>${w}</strong> lb each</span>
+    <button data-weight="1" aria-label="Raise the weight">+</button>
+  </div>`;
+}
+
+function proposedBlock(ex) {
+  return `
+    <p class="detail-meta">${ex.sets} sets &middot; ${esc(ex.reps)} reps &middot; ${GROUPS[ex.group].rest}s rest</p>
+    <p class="desc">${esc(ex.desc)}</p>
+    ${muscleMap(ex.muscles)}
+    <ul class="cues">${ex.cues.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+    ${weightPicker(ex)}
+    <div class="hero-actions">
+      <button class="btn" data-accept="1">Accept</button>
+      <button class="btn btn-quiet" data-swap="1">New exercise</button>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-quiet" data-markdone="1">Mark as done</button>
+    </div>
+    <button class="linky" data-skipex="1">Skip this exercise</button>`;
+}
+
+function setBlock(ex, setNo) {
+  const pct = Math.round((session.data.setsDone / ex.sets) * 100);
+  return `
+    <p class="set-count">Set <strong>${setNo}</strong> of ${ex.sets}</p>
+    <div class="bar is-set"><span style="width:${pct}%"></span></div>
+    <p class="bar-note">${session.data.setsDone} of ${ex.sets} done &middot; ${esc(ex.reps)} reps</p>
+    ${weightPicker(ex)}
+    <div class="hero-actions">
+      <button class="btn" data-done="1">Set complete</button>
+      <button class="btn btn-quiet" data-markdone="1">Mark exercise done</button>
+    </div>
+    <p class="cue-strip">${esc(ex.cues[0])}</p>`;
+}
+
+function restBlock(ex, setNo) {
+  return `
+    <div class="rest">
+      <p class="rest-label">Rest</p>
+      <p class="rest-clock" id="restcount">${clock(session.restLeft())}</p>
+      <p class="rest-next">Set ${setNo} of ${ex.sets} starts automatically</p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn" data-skiprest="1">Start now</button>
+      <button class="btn btn-quiet" data-addrest="30">Add 30s</button>
+    </div>
+    <button class="linky" data-markdone="1">Mark exercise done and move on</button>`;
+}
+
+function doneView() {
+  const d = session.data;
+  const names = [...new Set(d.logged.map(l => l.exerciseName))];
+  return `
+    ${welcomeBar()}
+    <div class="detail">
+      <h1 class="run-name">${esc(d.title)} done</h1>
+      <p class="detail-meta">${clock((Date.now() - d.startedAt) / 1000)} &middot; ${d.logged.length} sets &middot; ${names.length} exercises</p>
+      <ul class="cues">${names.map(n => `<li>${esc(n)}</li>`).join('')}</ul>
+      <p class="stage-note">Saved to your sheet. ${esc(sync.label())}.</p>
+      <div class="hero-actions"><button class="btn" data-close="1">Back to the week</button></div>
+    </div>`;
+}
+
+/* ---------- events ---------- */
+
+function on(sel, fn) { app.querySelectorAll(sel).forEach(el => el.addEventListener('click', () => fn(el))); }
+const dateOf = k => new Date(k + 'T12:00:00');
+
+function beginSession(dk, startIdx) {
+  const d = dateOf(dk);
+  const plan = sessionFor(d);
+  if (!plan) return;
+  if (session.data && session.data.phase !== 'done') session.abandon();
+  session.start(dk, plan, orderFor(d), startIdx || 0);
+  state.screen = 'run';
+  holdScreen();
+  render();
+}
+
+function bind() {
+  on('[data-split]', el => { state.split = Number(el.dataset.split); store.set('split', state.split); state.moving = false; render(); });
+  on('[data-goto]', el => { state.selected = el.dataset.goto === key(today()) ? null : el.dataset.goto; state.screen = 'home'; state.moving = false; render(); });
+  on('[data-exercise]', el => { state.exercise = el.dataset.exercise; state.detailFrom = el.dataset.from || null; state.screen = 'detail'; render(); });
+  on('[data-back]', () => { state.screen = 'home'; state.exercise = null; render(); });
+  on('[data-activate]', el => { activateDay(el.dataset.activate); render(); });
+  on('[data-deactivate]', el => { deactivateDay(el.dataset.deactivate); render(); });
+  on('[data-history]', () => { state.screen = 'history'; loadHistory(); render(); });
+
+  on('[data-move]', el => { state.moving = el.dataset.move === '1'; render(); });
+  on('[data-swapday]', el => { swapDays(isoDay(viewedDate()), Number(el.dataset.swapday)); state.moving = false; render(); });
+  on('[data-resetweek]', () => { resetWeek(); state.moving = false; render(); });
+
+  on('[data-up]', el => { moveAt(dateOf(el.dataset.d), Number(el.dataset.up), -1); render(); });
+  on('[data-down]', el => { moveAt(dateOf(el.dataset.d), Number(el.dataset.down), 1); render(); });
+  on('[data-replace]', el => {
+    if (!replaceAt(dateOf(el.dataset.d), Number(el.dataset.replace))) alert('Every exercise for that muscle group is already in this session.');
+    render();
+  });
+  on('[data-replacehere]', el => {
+    const d = dateOf(el.dataset.d), i = Number(el.dataset.replacehere);
+    if (replaceAt(d, i)) { state.exercise = orderFor(d)[i]; } else alert('Every exercise for that muscle group is already in this session.');
+    render();
+  });
+
+  on('[data-start]', el => beginSession(el.dataset.start, 0));
+  on('[data-starthere]', el => beginSession(el.dataset.starthere, Math.max(0, Number(el.dataset.i))));
+  on('[data-resume]', () => { state.screen = 'run'; holdScreen(); render(); });
+  on('[data-accept]', () => { session.accept(); render(); });
+  on('[data-swap]', () => { if (!session.swap()) alert('No other exercise left for this muscle group.'); render(); });
+  on('[data-skipex]', () => { session.skipExercise(); render(); });
+  on('[data-markdone]', () => { session.completeExercise(); render(); });
+  on('[data-done]', () => { session.completeSet(); render(); });
+  on('[data-skiprest]', () => { session.skipRest(); render(); });
+  on('[data-addrest]', el => { session.addRest(Number(el.dataset.addrest)); render(); });
+  on('[data-exit]', () => { state.screen = 'home'; releaseScreen(); render(); });
+  on('[data-close]', () => { session.data = null; store.set('active', null); state.screen = 'home'; releaseScreen(); render(); });
+
+  on('[data-weight]', el => {
+    const ex = session.exercise;
+    session.setWeight(ex.id, session.weight(ex.id) + Number(el.dataset.weight) * WEIGHT_STEP);
+    render();
+  });
+}
+
+/* ---------- clock ---------- */
+
+function beep() {
+  try {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return;
+    const ctx = new C();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = 660; o.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    o.start(); o.stop(ctx.currentTime + 0.36);
+  } catch (e) { /* no audio, no problem */ }
+}
+
+let lastBeep = null;
+
+setInterval(() => {
+  const s = document.getElementById('syncstate');
+  if (s) s.textContent = sync.label();
+  if (!session.data || session.data.phase === 'done') return;
+
+  const el = document.getElementById('elapsed');
+  if (el) el.textContent = clock(session.elapsed);
+  const mv = document.getElementById('motivate');
+  if (mv) mv.textContent = session.motivation();
+
+  if (session.data.phase === 'rest') {
+    const left = session.restLeft();
+    const rc = document.getElementById('restcount');
+    if (rc) rc.textContent = clock(left);
+    const w = Math.ceil(left);
+    if (w <= 3 && w >= 1 && lastBeep !== w) { lastBeep = w; beep(); }
+    if (left <= 0) { lastBeep = null; session.skipRest(); render(); }
+  }
+}, 500);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  if (state.screen === 'run' && session.data) holdScreen();
+  render();
+});
+
+session.load();
+if (session.data && session.data.phase !== 'done') { state.screen = 'run'; holdScreen(); }
+sync.flush();
+render();
+
+</script>
+</body>
+</html>
