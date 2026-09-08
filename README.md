@@ -2,7 +2,7 @@
 
 A dumbbell only training app that knows what day it is.
 
-Version 3. **One file.** Everything is inside `index.html`, so an update means replacing a single file.
+Version 4. **One file.** Everything is inside `index.html`, so an update means replacing a single file.
 
 ## The repo
 
@@ -39,27 +39,61 @@ per finished workout.
 
 ## The week
 
-Biceps opens the week on both splits.
-
 **3 days**
 
 | Day | Session | Groups |
 |-----|---------|--------|
-| Monday | Pull | Biceps, Back |
-| Wednesday | Push | Chest, Shoulders, Triceps |
+| Monday | Push | Chest, Shoulders, Triceps |
+| Wednesday | Pull | Back, Biceps |
 | Friday | Legs and core | Legs, Core |
 
 **5 days**
 
 | Day | Session |
 |-----|---------|
-| Monday | Arms |
-| Tuesday | Chest |
-| Wednesday | Back |
-| Thursday | Shoulders |
+| Monday | Chest and biceps |
+| Tuesday | Back |
+| Wednesday | Shoulders and triceps |
+| Thursday | Arms |
 | Friday | Legs and core |
 
-None of this is fixed. See below.
+These are only starting points. Every day's muscle groups are editable and the edits stick.
+
+## Muscle groups per day
+
+Every day card has a **Muscle groups** button. Eight chips: the seven muscle groups plus Cardio.
+Tap one on and the day gains that group's first three exercises at three sets. Tap it off and
+they go. The exercise count, set count and time estimate all recalculate as you go, because
+they are read off the actual list rather than stored.
+
+A day must keep at least one group. If you want nothing on a day, turn the day off instead.
+
+## Cardio
+
+Three presets sit under the muscle group chips: Zone 2 for 40 minutes, intervals for 30 minutes,
+and Zone 2 for an hour. Below them is a free text field for your own, a name and a length in
+minutes. Custom sessions are saved and reusable.
+
+Cardio behaves differently inside a workout. No weight picker, no sets, no rest countdown. It
+shows the target length, the session clock keeps running, and you log it when you come back.
+In the time estimate a cardio block counts its full length plus the usual changeover minutes.
+
+## Turning a day on and off
+
+- A scheduled day has **Turn this day off**. It becomes a rest day for that date only, and the
+  weekly schedule underneath is untouched.
+- A day that is off, or a normal rest day, has **Activate this day**, which builds a session from
+  the muscle groups you have not trained this week.
+- A day you turned off also gets **Put the schedule back**.
+
+Miss Monday, turn it off, activate Tuesday, and the week catches up.
+
+## The week band
+
+Under the wordmark: the ISO week number, how many of the seven days you have logged, and a row
+of seven dates. A logged day gets a check mark and goes dark. Tap any date to see that day's log,
+the total time, the set count, and every exercise with its set count and last weight used.
+Sets you marked done rather than worked through are flagged as such.
 
 ## What you can change from inside the app
 
@@ -82,8 +116,13 @@ None of this is fixed. See below.
 
 ## Everything else
 
-- 35 dumbbell exercises, 5 per muscle group. A session uses 3 per group on the 3 day split, 4 on the 5 day.
-- Every exercise animates on a loop, on the list and inside the workout.
+- 44 exercises. Five to seven per muscle group plus three cardio presets. A session takes 3 per
+  group on the 3 day split, 4 on the 5 day. Everything from your printed A, B and C workouts is in
+  there: neutral grip bench press, seated shoulder press, seated curl, hip thrust, sumo squat and
+  bench reverse crunch were the six that were missing.
+- Every exercise animates on a loop. The list keeps the simple figure. Open an exercise and you
+  get a fuller anatomical figure with the working muscles lit up, primary in solid red and
+  secondary faded.
 - Description, front and back muscle map, and technique cues on every lift.
 - Weight picker in 5 lb steps, capped at 55 per hand, remembered per exercise.
 - Set counter, progress bar, rest countdown with a beep at 3, 2, 1, then the next set auto starts.
@@ -125,3 +164,5 @@ Editing by hand and then asking for a rebuilt file will lose your edits. Tell me
 
 - Offline install as a home screen app. This needs two extra files, a service worker and a
   manifest, which is the one thing that cannot live inside a single HTML file.
+- The muscle map on the exercise page is still the simple front and back diagram. The animated
+  figure beside it now carries most of that job.
