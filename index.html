@@ -334,6 +334,92 @@ button:focus-visible { outline: 2px solid var(--stamp); outline-offset: 3px; }
 .hist-meta { color: var(--iron); font-variant-numeric: tabular-nums; font-size: 13px; }
 .hist-empty { color: var(--iron); }
 
+/* ---------- anatomical figure ---------- */
+
+.bd-prop { stroke: var(--rule); stroke-linecap: round; }
+.bd-fill { fill: #c6cace; stroke: #9aa1a8; stroke-width: 0.8; stroke-linejoin: round; }
+.bd-far { fill: #d9dcdd; stroke: #bcc1c4; stroke-width: 0.7; stroke-linejoin: round; }
+.bd-neck { stroke: #c6cace; stroke-linecap: round; }
+.bd-hl { stroke: none; }
+.bd-hl.is-first { fill: var(--stamp); opacity: 0.92; }
+.bd-hl.is-second { fill: var(--stamp); opacity: 0.34; }
+.bd-bell rect { fill: var(--ink); }
+
+.detail-stage.is-body { background: #eceae5; }
+
+/* ---------- week band ---------- */
+
+.band {
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--slab); padding: 10px 12px 12px; margin-bottom: 14px;
+}
+
+.band-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 0 0 8px; font-size: 12px; color: var(--iron);
+}
+
+.band-week { font-variation-settings: 'wdth' 112, 'wght' 700; color: var(--ink); font-size: 13px; }
+.band-grid { display: flex; gap: 5px; }
+
+.band-day {
+  flex: 1 1 0; min-width: 0; text-align: center;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--concrete); padding: 6px 1px 7px; min-height: 56px;
+}
+
+.band-day .bd-w { display: block; font-size: 10px; color: var(--iron); }
+.band-day .bd-n { display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
+.band-day .bd-tick { display: block; font-size: 15px; line-height: 1; color: var(--stamp); }
+.band-day.is-today { border-color: var(--ink); border-width: 2px; }
+.band-day.is-done { background: var(--ink); }
+.band-day.is-done .bd-w, .band-day.is-done .bd-n { color: var(--rule); }
+.band-day.is-done .bd-tick { color: #fff; }
+
+/* ---------- group editor ---------- */
+
+.groups {
+  margin-top: 12px; padding: 14px 14px 10px;
+  border: 1px solid var(--ink); border-radius: var(--radius); background: var(--slab);
+}
+
+.groups h3 { margin: 0 0 4px; font-size: 15px; font-variation-settings: 'wght' 700; }
+.groups p.hint { margin: 0 0 10px; font-size: 13px; color: var(--iron); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip {
+  border: 1px solid var(--rule); border-radius: 20px;
+  padding: 9px 14px; min-height: 42px; font-size: 14px; background: var(--concrete);
+}
+
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--slab); border-color: var(--ink); }
+
+.cardio-form { margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.cardio-form label { display: block; font-size: 13px; color: var(--iron); margin-bottom: 4px; }
+
+.cardio-row { display: flex; gap: 8px; }
+
+.cardio-form input {
+  font: inherit; padding: 11px 12px; min-height: 46px;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--concrete); color: var(--ink); width: 100%;
+}
+
+.cardio-form input.mins { flex: 0 0 96px; text-align: center; }
+.cardio-form .btn { flex: 0 0 auto; min-height: 46px; padding: 0 18px; }
+
+/* ---------- day log ---------- */
+
+.logrow {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 10px 0; border-top: 1px solid var(--rule); font-size: 14px;
+}
+
+.logrow-n { flex: 0 0 26px; color: var(--iron); font-variant-numeric: tabular-nums; }
+.logrow-name { flex: 1 1 auto; }
+.logrow-meta { color: var(--iron); font-size: 13px; font-variant-numeric: tabular-nums; }
+.logrow-mark { color: var(--stamp); font-size: 12px; }
+
 #boot{margin:24px 16px;padding:16px;max-width:480px;border:2px solid #c0361e;border-radius:4px;
 background:#fff;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#182028;white-space:pre-wrap;word-break:break-word}
 #boot h2{margin:0 0 8px;font-size:15px}
@@ -366,12 +452,26 @@ const GROUPS = {
   biceps:    { name: 'Biceps',    rest: 60 },
   triceps:   { name: 'Triceps',   rest: 60 },
   legs:      { name: 'Legs',      rest: 90 },
-  core:      { name: 'Core',      rest: 45 }
+  core:      { name: 'Core',      rest: 45 },
+  cardio:    { name: 'Cardio',    rest: 0 }
 };
 
 const FLOOR = { p1: [10, 116], p2: [130, 116] };
 const BENCH_FLAT = [FLOOR, { p1: [30, 78], p2: [112, 78] }, { p1: [46, 78], p2: [46, 100] }, { p1: [100, 78], p2: [100, 100] }];
 const BENCH_TOP = y0 => [{ p1: [y0[0], 48], p2: [y0[1], 48] }, { p1: [y0[0], 76], p2: [y0[1], 76] }];
+
+const RUN_POSE = {
+  props: [FLOOR],
+  head: [66, 20], neck: [66, 34], hip: [70, 66],
+  near: { shoulder: [58, 39], elbow: [46, 50], hand: [50, 62], knee: [52, 86], foot: [40, 98] },
+  far:  { shoulder: [74, 39], elbow: [86, 44], hand: [80, 30], knee: [92, 84], foot: [104, 96] },
+  db: []
+};
+
+const RUN_END = {
+  near: { elbow: [82, 46], hand: [76, 32], knee: [88, 84], foot: [100, 96] },
+  far:  { elbow: [50, 50], hand: [54, 62], knee: [56, 86], foot: [44, 98] }
+};
 
 const EXERCISES = [
   /* ---------- CHEST ---------- */
@@ -1126,6 +1226,168 @@ const EXERCISES = [
       near: { knee: [61, 92], foot: [59, 116] },
       far:  { knee: [80, 74], foot: [88, 92] }
     }
+  },
+
+  /* ---------- FROM THE PRINTED WORKOUTS ---------- */
+  {
+    id: 'chest_neutral_press',
+    name: 'Neutral grip bench press',
+    group: 'chest',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'Flat press with the palms facing each other the whole way. Kinder to the shoulder than the standard grip.',
+    muscles: { primary: ['chest', 'triceps'], secondary: ['frontDelt'] },
+    cues: ['Palms face in, never rotate out', 'Elbows tucked closer than a normal press', 'Touch the bells lightly to the chest'],
+    pose: {
+      props: BENCH_FLAT,
+      head: [40, 64], neck: [52, 68], hip: [86, 70],
+      near: { shoulder: [52, 68], elbow: [51, 52], hand: [54, 38], knee: [96, 92], foot: [102, 116] },
+      far:  { shoulder: [50, 66], elbow: [48, 50], hand: [52, 36], knee: [92, 94], foot: [98, 116] },
+      db: [[54, 38, 90], [52, 36, 90]]
+    },
+    end: {
+      near: { elbow: [46, 61], hand: [56, 54] },
+      far:  { elbow: [43, 59], hand: [54, 52] },
+      db: [[56, 54, 90], [54, 52, 90]]
+    }
+  },
+  {
+    id: 'shoulders_seated_press',
+    name: 'Seated shoulder press',
+    group: 'shoulders',
+    sets: 3, reps: '8-12', tempo: 2.8,
+    desc: 'Overhead press with the back braced against the bench. Takes the legs and the lower back out of it entirely.',
+    muscles: { primary: ['frontDelt', 'sideDelt'], secondary: ['triceps', 'traps'] },
+    cues: ['Back flat on the pad, no arching off it', 'Press up, not forward', 'Lower until the elbows pass the shoulders'],
+    pose: {
+      props: [FLOOR, { p1: [46, 34], p2: [62, 80] }, { p1: [62, 80], p2: [100, 82] }, { p1: [88, 82], p2: [88, 106] }],
+      head: [56, 28], neck: [58, 44], hip: [76, 78],
+      near: { shoulder: [50, 48], elbow: [42, 36], hand: [44, 18], knee: [96, 90], foot: [102, 116] },
+      far:  { shoulder: [66, 48], elbow: [74, 36], hand: [72, 18], knee: [92, 92], foot: [98, 116] },
+      db: [[44, 18, 0], [72, 18, 0]]
+    },
+    end: {
+      near: { elbow: [40, 54], hand: [46, 38] },
+      far:  { elbow: [76, 54], hand: [70, 38] },
+      db: [[46, 38, 0], [70, 38, 0]]
+    }
+  },
+  {
+    id: 'biceps_seated_curl',
+    name: 'Seated curl',
+    group: 'biceps',
+    sets: 3, reps: '10-15', tempo: 2.8,
+    desc: 'Curling seated on the bench so the hips and knees cannot help. Strict by design.',
+    muscles: { primary: ['biceps'], secondary: ['forearm'] },
+    cues: ['Sit tall, no rocking back', 'Elbows stay beside the ribs', 'Squeeze hard at the top'],
+    pose: {
+      props: [FLOOR, { p1: [50, 84], p2: [100, 84] }, { p1: [58, 84], p2: [58, 106] }, { p1: [92, 84], p2: [92, 106] }],
+      head: [56, 36], neck: [60, 50], hip: [86, 82],
+      near: { shoulder: [60, 50], elbow: [60, 70], hand: [50, 56], knee: [64, 86], foot: [58, 116] },
+      far:  { shoulder: [57, 48], elbow: [57, 68], hand: [47, 54], knee: [90, 88], foot: [92, 116] },
+      db: [[48, 55, 0], [45, 53, 0]]
+    },
+    end: {
+      near: { hand: [62, 90] },
+      far:  { hand: [59, 88] },
+      db: [[62, 92, 0], [59, 90, 0]]
+    }
+  },
+  {
+    id: 'legs_hip_thrust',
+    name: 'Dumbbell hip thrust',
+    group: 'legs',
+    sets: 3, reps: '10-15', tempo: 3.0,
+    desc: 'Shoulders braced on the bench, a bell across the hips, driving the hips to full lockout. The best glute lift you can do with dumbbells.',
+    muscles: { primary: ['glutes'], secondary: ['hamstrings', 'abs'] },
+    cues: ['Shoulder blades on the edge of the bench', 'Chin tucked, ribs down', 'Squeeze the glutes hard at the top, do not arch the back'],
+    pose: {
+      props: [FLOOR, { p1: [30, 74], p2: [74, 74] }, { p1: [40, 74], p2: [40, 100] }],
+      head: [44, 66], neck: [56, 70], hip: [90, 74],
+      near: { shoulder: [56, 70], elbow: [50, 80], hand: [44, 86], knee: [110, 86], foot: [114, 114] },
+      far:  { shoulder: [53, 73], elbow: [47, 83], hand: [41, 89], knee: [113, 89], foot: [117, 116] },
+      db: [[90, 64, 0]]
+    },
+    end: {
+      hip: [90, 98],
+      near: { elbow: [50, 82], hand: [44, 88], knee: [110, 94] },
+      far:  { elbow: [47, 85], hand: [41, 91], knee: [113, 97] },
+      db: [[90, 88, 0]]
+    }
+  },
+  {
+    id: 'legs_sumo_squat',
+    name: 'Sumo squat',
+    group: 'legs',
+    sets: 3, reps: '10-15', tempo: 3.2,
+    desc: 'Wide stance with the toes turned out and one bell hanging between the legs. Loads the inner thigh and glutes.',
+    muscles: { primary: ['quads', 'glutes'], secondary: ['hamstrings', 'abs'] },
+    cues: ['Feet wider than the shoulders, toes out', 'Knees track the same way the toes point', 'Chest up the whole way'],
+    pose: {
+      props: [FLOOR],
+      head: [70, 32], neck: [70, 46], hip: [70, 80],
+      near: { shoulder: [58, 51], elbow: [58, 66], hand: [66, 80], knee: [46, 92], foot: [40, 116] },
+      far:  { shoulder: [82, 51], elbow: [82, 66], hand: [74, 80], knee: [94, 92], foot: [100, 116] },
+      db: [[70, 84, 90]]
+    },
+    end: {
+      head: [70, 16], neck: [70, 30], hip: [70, 64],
+      near: { shoulder: [58, 35], elbow: [58, 50], hand: [66, 64], knee: [52, 90], foot: [44, 116] },
+      far:  { shoulder: [82, 35], elbow: [82, 50], hand: [74, 64], knee: [88, 90], foot: [96, 116] },
+      db: [[70, 68, 90]]
+    }
+  },
+  {
+    id: 'core_reverse_crunch',
+    name: 'Bench reverse crunch',
+    group: 'core',
+    sets: 3, reps: '10-15', tempo: 2.8,
+    desc: 'Lying on the bench holding the edge behind your head, the knees pull in toward the chest. Hits the lower abs.',
+    muscles: { primary: ['abs'], secondary: ['obliques', 'quads'] },
+    cues: ['Grip the bench behind your head', 'Curl the hips off the pad, do not just fold the knees', 'Lower slowly, never drop'],
+    pose: {
+      props: [FLOOR, { p1: [30, 78], p2: [112, 78] }, { p1: [46, 78], p2: [46, 100] }, { p1: [100, 78], p2: [100, 100] }],
+      head: [36, 64], neck: [50, 68], hip: [84, 72],
+      near: { shoulder: [50, 68], elbow: [42, 76], hand: [34, 78], knee: [72, 52], foot: [56, 58] },
+      far:  { shoulder: [53, 71], elbow: [45, 79], hand: [37, 81], knee: [75, 55], foot: [59, 61] },
+      db: [[52, 56, 90]]
+    },
+    end: {
+      near: { knee: [102, 62], foot: [122, 66] },
+      far:  { knee: [105, 65], foot: [125, 69] },
+      db: [[124, 64, 90]]
+    }
+  },
+
+  /* ---------- CARDIO ---------- */
+  {
+    id: 'cardio_zone2_40',
+    name: 'Zone 2, 40 minutes',
+    group: 'cardio', cardio: true, minutes: 40,
+    sets: 1, reps: '40 min', tempo: 0.85,
+    desc: 'Easy steady effort. You should be able to hold a conversation the whole way through.',
+    muscles: { primary: ['quads', 'calves'], secondary: ['hamstrings', 'glutes'] },
+    cues: ['Nose breathing should stay possible', 'Pick a pace you could hold for twice as long', 'Do not let it drift into a hard effort'],
+    pose: RUN_POSE, end: RUN_END
+  },
+  {
+    id: 'cardio_hiit_30',
+    name: 'Intervals, 30 minutes',
+    group: 'cardio', cardio: true, minutes: 30,
+    sets: 1, reps: '30 min', tempo: 0.45,
+    desc: 'Hard efforts with easy recovery between them. Short, unpleasant, and very effective.',
+    muscles: { primary: ['quads', 'calves'], secondary: ['hamstrings', 'glutes'] },
+    cues: ['Warm up properly first, ten minutes minimum', 'Hard means hard, the recovery should feel needed', 'Stop the session if the hard efforts start slowing down'],
+    pose: RUN_POSE, end: RUN_END
+  },
+  {
+    id: 'cardio_zone2_60',
+    name: 'Zone 2, 1 hour',
+    group: 'cardio', cardio: true, minutes: 60,
+    sets: 1, reps: '60 min', tempo: 0.9,
+    desc: 'The long easy one. Same effort as the 40 minute session, just more of it.',
+    muscles: { primary: ['quads', 'calves'], secondary: ['hamstrings', 'glutes'] },
+    cues: ['Eat something beforehand', 'Take water with you', 'Same easy pace from start to finish'],
+    pose: RUN_POSE, end: RUN_END
   }
 ];
 
@@ -1333,7 +1595,9 @@ function tickFigures(now) {
     const period = (ex.tempo || 2.8) * 1000;
     const phase = Number(svg.dataset.phase) || 0;
     const u = (((now / period) + phase) % 1 + 1) % 1;
-    paintFigure(svg, ex, (1 - Math.cos(2 * Math.PI * u)) / 2);
+    const t = (1 - Math.cos(2 * Math.PI * u)) / 2;
+    if (svg.dataset.kind === 'body') paintBody(svg, ex, t);
+    else paintFigure(svg, ex, t);
   });
   requestAnimationFrame(tickFigures);
 }
@@ -1342,6 +1606,188 @@ function startFigureLoop() {
   if (animating || typeof requestAnimationFrame !== 'function') return;
   animating = true;
   requestAnimationFrame(tickFigures);
+}
+
+
+/* ===== body.js ===== */
+/* A fuller figure for the exercise screen. Same pose data as the stick figure,
+   drawn as tapered filled limbs with the working muscles lit up. */
+
+const BODY_SEGS = [
+  { side: 'far',  a: 'shoulder', b: 'elbow', w: [8.5, 6.5], seg: 'upperArm' },
+  { side: 'far',  a: 'elbow',    b: 'hand',  w: [6.5, 4.5], seg: 'forearm' },
+  { side: 'far',  a: 'hip',      b: 'knee',  w: [12, 8.5],  seg: 'thigh' },
+  { side: 'far',  a: 'knee',     b: 'foot',  w: [8.5, 5.5], seg: 'shin' },
+  { side: 'near', a: 'hip',      b: 'knee',  w: [12.5, 9],  seg: 'thigh' },
+  { side: 'near', a: 'knee',     b: 'foot',  w: [9, 6],     seg: 'shin' },
+  { side: 'near', a: 'shoulder', b: 'elbow', w: [9, 7],     seg: 'upperArm' },
+  { side: 'near', a: 'elbow',    b: 'hand',  w: [7, 5],     seg: 'forearm' }
+];
+
+/* Where each muscle sits along its segment, as a fraction from start to end. */
+const MUSCLE_SEG = {
+  biceps:     { seg: 'upperArm', t: [0.18, 0.82] },
+  triceps:    { seg: 'upperArm', t: [0.18, 0.82] },
+  forearm:    { seg: 'forearm',  t: [0.08, 0.70] },
+  quads:      { seg: 'thigh',    t: [0.12, 0.88] },
+  hamstrings: { seg: 'thigh',    t: [0.12, 0.88] },
+  calves:     { seg: 'shin',     t: [0.05, 0.60] },
+  frontDelt:  { seg: 'torso',    t: [0.00, 0.17] },
+  sideDelt:   { seg: 'torso',    t: [0.00, 0.17] },
+  rearDelt:   { seg: 'torso',    t: [0.00, 0.17] },
+  traps:      { seg: 'torso',    t: [0.00, 0.22] },
+  chest:      { seg: 'torso',    t: [0.10, 0.44] },
+  lats:       { seg: 'torso',    t: [0.20, 0.60] },
+  abs:        { seg: 'torso',    t: [0.46, 0.86] },
+  obliques:   { seg: 'torso',    t: [0.46, 0.86] },
+  lowerBack:  { seg: 'torso',    t: [0.56, 0.90] },
+  glutes:     { seg: 'torso',    t: [0.80, 1.00] }
+};
+
+const TORSO_W = [18, 13.5];
+
+function highlightPlan(ex) {
+  const out = [];
+  const seen = new Set();
+  const add = (list, rank) => list.forEach(m => {
+    const spec = MUSCLE_SEG[m];
+    if (!spec) return;
+    const targets = spec.seg === 'torso' ? [{ side: null, seg: 'torso' }]
+      : [{ side: 'near', seg: spec.seg }, { side: 'far', seg: spec.seg }];
+    targets.forEach(t => {
+      const k = `${t.side}|${t.seg}|${spec.t[0]}|${spec.t[1]}|${rank}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push({ side: t.side, seg: t.seg, t: spec.t, rank });
+    });
+  });
+  add(ex.muscles.primary || [], 'first');
+  add((ex.muscles.secondary || []).filter(m => !(ex.muscles.primary || []).includes(m)), 'second');
+  return out;
+}
+
+function taper(a, b, wa, wb) {
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  return [
+    [a[0] + nx * wa / 2, a[1] + ny * wa / 2],
+    [b[0] + nx * wb / 2, b[1] + ny * wb / 2],
+    [b[0] - nx * wb / 2, b[1] - ny * wb / 2],
+    [a[0] - nx * wa / 2, a[1] - ny * wa / 2]
+  ].map(p => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' ');
+}
+
+const mixPt = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+const mixNum = (a, b, t) => a + (b - a) * t;
+
+function bodySegments(pose) {
+  const out = [];
+  BODY_SEGS.forEach(s => {
+    const side = pose[s.side];
+    const a = s.a === 'hip' ? pose.hip : side[s.a];
+    const b = side[s.b];
+    if (!a || !b) { out.push(null); return; }
+    out.push({ a, b, wa: s.w[0], wb: s.w[1], side: s.side, seg: s.seg });
+  });
+  return out;
+}
+
+function bodySVG(ex) {
+  const segs = bodySegments(ex.pose);
+  const parts = [];
+
+  parts.push(...(ex.pose.props || []).map(q =>
+    `<line x1="${q.p1[0]}" y1="${q.p1[1]}" x2="${q.p2[0]}" y2="${q.p2[1]}" class="bd-prop" stroke-width="8"/>`));
+
+  segs.forEach((s, i) => {
+    if (!s) return;
+    if (s.side !== 'far') return;
+    if (s.seg === 'upperArm') parts.push(`<circle data-bcapseg="${i}" class="bd-far" r="4.8" cx="0" cy="0"/>`);
+    parts.push(`<polygon data-bs="${i}" class="bd-far" points=""/>`);
+    parts.push(`<circle data-bjoint="${i}" class="bd-far" r="${(s.wb / 2).toFixed(1)}" cx="0" cy="0"/>`);
+  });
+
+  parts.push('<polygon data-btorso="1" class="bd-fill" points=""/>');
+  parts.push('<circle data-bcap="hip" class="bd-fill" r="7.5" cx="0" cy="0"/>');
+
+  segs.forEach((s, i) => {
+    if (!s || s.side !== 'near') return;
+    if (s.seg === 'upperArm') parts.push(`<circle data-bcapseg="${i}" class="bd-fill" r="5.2" cx="0" cy="0"/>`);
+    parts.push(`<polygon data-bs="${i}" class="bd-fill" points=""/>`);
+    parts.push(`<circle data-bjoint="${i}" class="bd-fill" r="${(s.wb / 2).toFixed(1)}" cx="0" cy="0"/>`);
+  });
+
+  const plan = highlightPlan(ex);
+  plan.forEach((h, k) => {
+    parts.push(`<polygon data-bh="${k}" class="bd-hl is-${h.rank}" points=""/>`);
+  });
+
+  parts.push('<line data-bneck="1" class="bd-neck" stroke-width="11" x1="0" y1="0" x2="0" y2="0"/>');
+  parts.push('<circle data-bhead="1" class="bd-fill" r="9.5" cx="0" cy="0"/>');
+
+  (ex.pose.db || []).forEach((d, i) => parts.push(`<g data-db="${i}" class="bd-bell">
+    <rect x="-8" y="-1.8" width="16" height="3.6" rx="1.4"/>
+    <rect x="-13" y="-6" width="5.5" height="12" rx="1.8"/>
+    <rect x="7.5" y="-6" width="5.5" height="12" rx="1.8"/>
+  </g>`));
+
+  return `<svg viewBox="0 0 140 124" class="figure bodyfig" data-ex="${ex.id}" data-kind="body"
+    role="img" aria-label="${ex.name} technique" xmlns="http://www.w3.org/2000/svg">${parts.join('')}</svg>`;
+}
+
+function paintBody(svg, ex, t) {
+  const p = poseAt(ex, t);
+  const segs = bodySegments(p);
+
+  svg.querySelectorAll('[data-bs]').forEach(el => {
+    const s = segs[Number(el.dataset.bs)];
+    if (s) el.setAttribute('points', taper(s.a, s.b, s.wa, s.wb));
+  });
+
+  svg.querySelectorAll('[data-bjoint]').forEach(el => {
+    const s = segs[Number(el.dataset.bjoint)];
+    if (s) { el.setAttribute('cx', s.b[0].toFixed(2)); el.setAttribute('cy', s.b[1].toFixed(2)); }
+  });
+
+  const torso = svg.querySelector('[data-btorso]');
+  if (torso) torso.setAttribute('points', taper(p.neck, p.hip, TORSO_W[0], TORSO_W[1]));
+
+  const hipCap = svg.querySelector('[data-bcap="hip"]');
+  if (hipCap) { hipCap.setAttribute('cx', p.hip[0].toFixed(2)); hipCap.setAttribute('cy', p.hip[1].toFixed(2)); }
+
+  svg.querySelectorAll('[data-bcapseg]').forEach(el => {
+    const s = segs[Number(el.dataset.bcapseg)];
+    if (s) { el.setAttribute('cx', s.a[0].toFixed(2)); el.setAttribute('cy', s.a[1].toFixed(2)); }
+  });
+
+  const plan = highlightPlan(ex);
+  svg.querySelectorAll('[data-bh]').forEach(el => {
+    const h = plan[Number(el.dataset.bh)];
+    if (!h) return;
+    let a, b, wa, wb;
+    if (h.seg === 'torso') { a = p.neck; b = p.hip; wa = TORSO_W[0] * 0.72; wb = TORSO_W[1] * 0.72; }
+    else {
+      const s = segs.find(x => x && x.side === h.side && x.seg === h.seg);
+      if (!s) { el.setAttribute('points', ''); return; }
+      a = s.a; b = s.b; wa = s.wa * 0.62; wb = s.wb * 0.62;
+    }
+    const p0 = mixPt(a, b, h.t[0]), p1 = mixPt(a, b, h.t[1]);
+    el.setAttribute('points', taper(p0, p1, mixNum(wa, wb, h.t[0]), mixNum(wa, wb, h.t[1])));
+  });
+
+  const neck = svg.querySelector('[data-bneck]');
+  if (neck) {
+    neck.setAttribute('x1', p.head[0]); neck.setAttribute('y1', p.head[1]);
+    neck.setAttribute('x2', p.neck[0]); neck.setAttribute('y2', p.neck[1]);
+  }
+  const head = svg.querySelector('[data-bhead]');
+  if (head) { head.setAttribute('cx', p.head[0]); head.setAttribute('cy', p.head[1]); }
+
+  svg.querySelectorAll('[data-db]').forEach(g => {
+    const d = p.db[Number(g.dataset.db)];
+    if (d) g.setAttribute('transform', `translate(${d[0].toFixed(2)} ${d[1].toFixed(2)}) rotate(${d[2].toFixed(2)})`);
+  });
 }
 
 
@@ -1437,6 +1883,7 @@ const MOTIVATION = [
 function estimateSeconds(items) {
   let sec = 0;
   items.forEach(e => {
+    if (e.cardio) { sec += (e.minutes || 30) * 60 + TRANSITION_SEC; return; }
     sec += e.sets * WORK_SEC_PER_SET;
     sec += (e.sets - 1) * GROUPS[e.group].rest;
     sec += TRANSITION_SEC;
@@ -1519,7 +1966,7 @@ const session = {
     this.data.setsDone++;
     const entry = {
       exerciseId: ex.id, exerciseName: ex.name, group: ex.group,
-      set: this.data.setsDone, reps: ex.reps, weight: this.weight(ex.id),
+      set: this.data.setsDone, reps: ex.reps, weight: ex.cardio ? '' : this.weight(ex.id),
       elapsedSec: Math.round(this.elapsed), marked: marked ? 'marked done' : ''
     };
     this.data.logged.push(entry);
@@ -1582,6 +2029,7 @@ const session = {
       exercises: [...new Set(d.logged.map(l => l.exerciseName))],
       finishedAt: new Date().toISOString()
     };
+    log[d.dateKey].entries = d.logged;
     store.set('log', log);
     sync.push({
       type: 'session', dateKey: d.dateKey, title: d.title, groups: d.groups.join('|'),
@@ -1603,21 +2051,22 @@ const session = {
 
 const DEFAULT_SPLITS = {
   3: [
-    { mark: 'A', title: 'Pull', groups: ['biceps', 'back'], weekday: 1 },
-    { mark: 'B', title: 'Push', groups: ['chest', 'shoulders', 'triceps'], weekday: 3 },
+    { mark: 'A', title: 'Push', groups: ['chest', 'shoulders', 'triceps'], weekday: 1 },
+    { mark: 'B', title: 'Pull', groups: ['back', 'biceps'], weekday: 3 },
     { mark: 'C', title: 'Legs and core', groups: ['legs', 'core'], weekday: 5 }
   ],
   5: [
-    { mark: '1', title: 'Arms', groups: ['biceps', 'triceps'], weekday: 1 },
-    { mark: '2', title: 'Chest', groups: ['chest'], weekday: 2 },
-    { mark: '3', title: 'Back', groups: ['back'], weekday: 3 },
-    { mark: '4', title: 'Shoulders', groups: ['shoulders'], weekday: 4 },
+    { mark: '1', title: 'Chest and biceps', groups: ['chest', 'biceps'], weekday: 1 },
+    { mark: '2', title: 'Back', groups: ['back'], weekday: 2 },
+    { mark: '3', title: 'Shoulders and triceps', groups: ['shoulders', 'triceps'], weekday: 3 },
+    { mark: '4', title: 'Arms', groups: ['biceps', 'triceps'], weekday: 4 },
     { mark: '5', title: 'Legs and core', groups: ['legs', 'core'], weekday: 5 }
   ]
 };
 
 const PER_GROUP = { 3: 3, 5: 4 };
-const GROUP_PRIORITY = ['biceps', 'back', 'chest', 'shoulders', 'triceps', 'legs', 'core'];
+const GROUP_PRIORITY = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'legs', 'core'];
+const EDITABLE_GROUPS = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'legs', 'core', 'cardio'];
 const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const state = {
@@ -1627,10 +2076,45 @@ const state = {
   detailFrom: null,
   screen: 'home',
   moving: false,
+  editing: false,
+  logDate: null,
   history: null
 };
 
+/* ---------- custom cardio ---------- */
+
+function loadCustomCardio() {
+  const list = store.get('customCardio', []);
+  list.forEach(c => {
+    if (byId(c.id)) return;
+    EXERCISES.push({
+      id: c.id, name: c.name, group: 'cardio', cardio: true, minutes: c.minutes,
+      sets: 1, reps: c.minutes + ' min', tempo: 0.85, custom: true,
+      desc: 'Your own cardio session, ' + c.minutes + ' minutes.',
+      muscles: { primary: ['quads', 'calves'], secondary: ['hamstrings', 'glutes'] },
+      cues: ['Your session, your rules', 'Warm up before the hard part', 'Log it when you are done'],
+      pose: RUN_POSE, end: RUN_END
+    });
+  });
+}
+
+function addCustomCardio(name, minutes) {
+  const list = store.get('customCardio', []);
+  const id = 'cardio_custom_' + Date.now();
+  list.push({ id, name: name + ', ' + minutes + ' min', minutes });
+  store.set('customCardio', list);
+  loadCustomCardio();
+  return id;
+}
+
 /* ---------- dates ---------- */
+
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const start = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - start) / 86400000 + 1) / 7);
+}
 
 const isoDay = d => ((d.getDay() + 6) % 7) + 1;
 const key = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1662,7 +2146,82 @@ function plans() {
 function scheduledFor(date) { return plans()[state.split][isoDay(date)] || null; }
 
 function sessionFor(date) {
-  return store.get('overrides', {})[key(date)] || scheduledFor(date);
+  const ov = store.get('overrides', {})[key(date)];
+  if (ov && ov.disabled) return null;
+  return ov || scheduledFor(date);
+}
+
+function isDisabled(date) {
+  const ov = store.get('overrides', {})[key(date)];
+  return !!(ov && ov.disabled);
+}
+
+function disableDay(dateKey) {
+  const o = store.get('overrides', {});
+  o[dateKey] = { disabled: true };
+  store.set('overrides', o);
+}
+
+function titleFor(groups) {
+  return groups.map(g => GROUPS[g].name).join(' and ');
+}
+
+/* Adds or removes a muscle group from a day, and keeps the exercise order in step. */
+function toggleGroup(date, group) {
+  const dk = key(date);
+  const overrides = store.get('overrides', {});
+  const ov = overrides[dk];
+  const scheduled = scheduledFor(date);
+  const n = PER_GROUP[state.split] || 3;
+
+  let plan;
+  if (ov && !ov.disabled) plan = ov;
+  else if (scheduled) plan = scheduled;
+  else {
+    overrides[dk] = { mark: '+', title: titleFor([group]), groups: [], activated: true };
+    store.set('overrides', overrides);
+    plan = overrides[dk];
+  }
+
+  let ids = orderFor(date).slice();
+  const has = plan.groups.includes(group);
+
+  if (has) {
+    if (plan.groups.length === 1) return false;
+    plan.groups = plan.groups.filter(g => g !== group);
+    ids = ids.filter(id => byId(id).group !== group);
+  } else {
+    plan.groups = plan.groups.concat([group]);
+    const take = group === 'cardio' ? 1 : n;
+    byGroup(group).slice(0, take).forEach(e => { if (!ids.includes(e.id)) ids.push(e.id); });
+  }
+
+  plan.title = titleFor(plan.groups);
+  if (ov && !ov.disabled) { overrides[dk] = plan; store.set('overrides', overrides); }
+  else { const p = plans(); p[state.split][isoDay(date)] = plan; store.set('plans', p); }
+  setOrder(date, ids);
+  return true;
+}
+
+function addCardioToDay(date, id) {
+  const dk = key(date);
+  const ids = orderFor(date).slice();   // read the order before the plan changes under us
+  const overrides = store.get('overrides', {});
+  const scheduled = scheduledFor(date);
+  let plan = (overrides[dk] && !overrides[dk].disabled) ? overrides[dk] : scheduled;
+  if (!plan) {
+    overrides[dk] = { mark: '+', title: 'Cardio', groups: ['cardio'], activated: true };
+    store.set('overrides', overrides);
+    plan = overrides[dk];
+    setOrder(date, [id]);
+    return;
+  }
+  if (!plan.groups.includes('cardio')) plan.groups = plan.groups.concat(['cardio']);
+  plan.title = titleFor(plan.groups);
+  if (overrides[dk] && !overrides[dk].disabled) { overrides[dk] = plan; store.set('overrides', overrides); }
+  else { const p = plans(); p[state.split][isoDay(date)] = plan; store.set('plans', p); }
+  if (!ids.includes(id)) ids.push(id);
+  setOrder(date, ids);
 }
 
 function resetWeek() {
@@ -1720,6 +2279,7 @@ function replaceAt(date, i) {
   const ids = orderFor(date).slice();
   const cur = byId(ids[i]);
   const pool = byGroup(cur.group);
+  if (pool.length < 2) return false;
   const start = pool.findIndex(e => e.id === cur.id);
   for (let k = 1; k <= pool.length; k++) {
     const cand = pool[(start + k) % pool.length];
@@ -1799,6 +2359,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 function render() {
   if (state.screen === 'run' && session.data) app.innerHTML = runView();
   else if (state.screen === 'history') app.innerHTML = historyView();
+  else if (state.screen === 'daylog') app.innerHTML = dayLogView();
   else if (state.screen === 'detail') app.innerHTML = detailView();
   else app.innerHTML = homeView();
   bind();
@@ -1831,9 +2392,11 @@ function homeView() {
       <div class="wordmark">Rack</div>
       <button class="datestamp" data-history="1">${esc(fmtLong(d))}${isToday ? '' : ' &middot; not today'}</button>
     </div>
+    ${weekBand(d)}
     ${session.data && session.data.phase !== 'done' ? resumeBar() : ''}
     ${logged ? doneCard(logged) : (plan ? heroTraining(d, plan) : heroRest(d))}
     ${state.moving ? dayMover(d) : ''}
+    ${state.editing ? groupEditor(d) : ''}
     ${splitSwitch()}
     ${weekStrip(d)}
     ${plan && !logged ? exerciseList(d) : ''}`;
@@ -1869,9 +2432,13 @@ function heroTraining(d, plan) {
       <p class="hero-count">${items.length} exercises &middot; ${sets} sets &middot; about ${humanMinutes(est)}</p>
       <div class="hero-actions">
         <button class="btn" data-start="${key(d)}">Start workout</button>
+        <button class="btn btn-quiet" data-edit="1">Muscle groups</button>
+      </div>
+      <div class="hero-actions">
         ${plan.activated
-          ? `<button class="btn btn-quiet" data-deactivate="${key(d)}">Clear</button>`
-          : `<button class="btn btn-quiet" data-move="1">Move day</button>`}
+          ? `<button class="btn btn-quiet" data-deactivate="${key(d)}">Clear this day</button>`
+          : `<button class="btn btn-quiet" data-disable="${key(d)}">Turn this day off</button>`}
+        <button class="btn btn-quiet" data-move="1">Move day</button>
       </div>
     </section>`;
 }
@@ -1882,11 +2449,15 @@ function heroRest(d) {
   return `
     <section class="hero is-rest">
       <div class="hero-mark">Rest</div>
-      <h1 class="hero-title">Nothing scheduled</h1>
+      <h1 class="hero-title">${isDisabled(d) ? 'Day turned off' : 'Nothing scheduled'}</h1>
       <p class="hero-groups">${next ? `Next up is ${esc(next.session.title)} on ${esc(fmtShort(next.date))}.` : ''}</p>
       <p class="hero-count">Not trained this week yet: ${esc(open)}</p>
       <div class="hero-actions">
         <button class="btn" data-activate="${key(d)}">Activate this day</button>
+        <button class="btn btn-quiet" data-edit="1">Muscle groups</button>
+      </div>
+      <div class="hero-actions">
+        ${isDisabled(d) ? `<button class="btn btn-quiet" data-deactivate="${key(d)}">Put the schedule back</button>` : ''}
         <button class="btn btn-quiet" data-move="1">Move a day here</button>
       </div>
     </section>`;
@@ -1968,6 +2539,102 @@ function exerciseList(d) {
   return `<div class="section-head"><h2>The session</h2><span>Tap to open, or reorder</span></div>${rows}`;
 }
 
+/* ---------- week band ---------- */
+
+function weekBand(viewed) {
+  const t = today(), log = store.get('log', {});
+  const days = weekOf(viewed);
+  const cells = days.map(d => {
+    const rec = log[key(d)];
+    const cls = ['band-day'];
+    if (rec) cls.push('is-done');
+    if (key(d) === key(t)) cls.push('is-today');
+    return `<button class="${cls.join(' ')}" data-daylog="${key(d)}">
+      <span class="bd-w">${esc(d.toLocaleDateString(undefined, { weekday: 'narrow' }))}</span>
+      <span class="bd-n">${d.getDate()}</span>
+      <span class="bd-tick">${rec ? '&check;' : '&nbsp;'}</span>
+    </button>`;
+  }).join('');
+  const done = days.filter(d => log[key(d)]).length;
+  return `<section class="band">
+    <p class="band-head"><span class="band-week">Week ${isoWeek(viewed)}</span>
+      <span>${done} of 7 days logged</span></p>
+    <div class="band-grid">${cells}</div>
+  </section>`;
+}
+
+/* ---------- muscle group editor ---------- */
+
+function groupEditor(d) {
+  const plan = sessionFor(d);
+  const active = plan ? plan.groups : [];
+  const chips = EDITABLE_GROUPS.map(g =>
+    `<button class="chip" aria-pressed="${active.includes(g)}" data-group="${g}" data-d="${key(d)}">${esc(GROUPS[g].name)}</button>`
+  ).join('');
+
+  const presets = byGroup('cardio').map(e =>
+    `<button class="chip" data-addcardio="${e.id}" data-d="${key(d)}">${esc(e.name)}</button>`
+  ).join('');
+
+  return `<section class="groups">
+    <h3>Muscle groups for this day</h3>
+    <p class="hint">Adding a group brings in ${PER_GROUP[state.split] || 3} exercises at 3 sets. The time estimate follows along.</p>
+    <div class="chips">${chips}</div>
+    <div class="cardio-form">
+      <label>Cardio sessions</label>
+      <div class="chips">${presets}</div>
+    </div>
+    <div class="cardio-form">
+      <label for="ctype">Your own cardio</label>
+      <div class="cardio-row">
+        <input id="ctype" type="text" placeholder="Cardio type, eg. Rower" autocomplete="off">
+        <input id="cmins" class="mins" type="number" min="5" max="180" step="5" placeholder="min" inputmode="numeric">
+        <button class="btn" data-savecardio="1" data-d="${key(d)}">Add</button>
+      </div>
+    </div>
+    <div class="mover-foot"><button class="linky" data-edit="0">Done</button></div>
+  </section>`;
+}
+
+/* ---------- one day's log ---------- */
+
+function dayLogView() {
+  const rec = store.get('log', {})[state.logDate];
+  if (!rec) return `${welcomeBar()}<div class="detail">
+    <button class="back" data-back="1">&larr; Back</button>
+    <h1>Nothing logged</h1>
+    <p class="detail-meta">${esc(state.logDate)}</p>
+    <p class="desc">No workout was recorded on this day.</p></div>`;
+
+  const entries = rec.entries || [];
+  const byEx = [];
+  entries.forEach(e => {
+    let row = byEx.find(r => r.name === e.exerciseName);
+    if (!row) { row = { name: e.exerciseName, group: e.group, sets: [] }; byEx.push(row); }
+    row.sets.push(e);
+  });
+
+  const rows = byEx.length ? byEx.map((r, i) => {
+    const marked = r.sets.some(s => s.marked);
+    const w = r.sets.map(s => s.weight).filter(Boolean);
+    return `<div class="logrow">
+      <span class="logrow-n">${i + 1}</span>
+      <span class="logrow-name">${esc(r.name)}
+        ${marked ? '<span class="logrow-mark"> marked done</span>' : ''}</span>
+      <span class="logrow-meta">${r.sets.length} sets${w.length ? ' &middot; ' + w[w.length - 1] + ' lb' : ''}</span>
+    </div>`;
+  }).join('') : `<p class="desc">${esc((rec.exercises || []).join(', '))}</p>`;
+
+  return `
+    ${welcomeBar()}
+    <div class="detail">
+      <button class="back" data-back="1">&larr; Back</button>
+      <h1>${esc(rec.title)}</h1>
+      <p class="detail-meta">${esc(state.logDate)} &middot; ${clock(rec.durationSec)} &middot; ${rec.sets} sets</p>
+      <div style="margin-top:18px">${rows}</div>
+    </div>`;
+}
+
 /* ---------- detail ---------- */
 
 function detailView() {
@@ -1979,7 +2646,7 @@ function detailView() {
     ${welcomeBar()}
     <div class="detail">
       <button class="back" data-back="1">&larr; Back</button>
-      <div class="detail-stage">${figureSVG(e, {})}</div>
+      <div class="detail-stage is-body">${bodySVG(e)}</div>
       <h1>${esc(e.name)}</h1>
       <p class="detail-meta">${e.sets} sets &middot; ${esc(e.reps)} reps &middot; ${GROUPS[e.group].rest}s rest between sets</p>
       <p class="desc">${esc(e.desc)}</p>
@@ -2056,7 +2723,7 @@ function runView() {
       </div>
       <div class="bar"><span style="width:${pct}%"></span></div>
       <p class="bar-note">${session.doneSets} of ${session.totalSets} sets done in this session</p>
-      <div class="detail-stage">${figureSVG(ex, {})}</div>
+      <div class="detail-stage is-body">${bodySVG(ex)}</div>
       <h1 class="run-name">${esc(ex.name)}</h1>
       ${d.phase === 'proposed' ? proposedBlock(ex) : ''}
       ${d.phase === 'set' ? setBlock(ex, setNo) : ''}
@@ -2079,7 +2746,7 @@ function proposedBlock(ex) {
     <p class="desc">${esc(ex.desc)}</p>
     ${muscleMap(ex.muscles)}
     <ul class="cues">${ex.cues.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
-    ${weightPicker(ex)}
+    ${ex.cardio ? '' : weightPicker(ex)}
     <div class="hero-actions">
       <button class="btn" data-accept="1">Accept</button>
       <button class="btn btn-quiet" data-swap="1">New exercise</button>
@@ -2092,6 +2759,11 @@ function proposedBlock(ex) {
 
 function setBlock(ex, setNo) {
   const pct = Math.round((session.data.setsDone / ex.sets) * 100);
+  if (ex.cardio) return `
+    <p class="set-count">Target <strong>${ex.minutes}</strong> min</p>
+    <p class="bar-note">The session clock above is running. Come back and log it when you finish.</p>
+    <div class="hero-actions"><button class="btn" data-done="1">Cardio complete</button></div>
+    <p class="cue-strip">${esc(ex.cues[0])}</p>`;
   return `
     <p class="set-count">Set <strong>${setNo}</strong> of ${ex.sets}</p>
     <div class="bar is-set"><span style="width:${pct}%"></span></div>
@@ -2149,13 +2821,29 @@ function beginSession(dk, startIdx) {
 }
 
 function bind() {
-  on('[data-split]', el => { state.split = Number(el.dataset.split); store.set('split', state.split); state.moving = false; render(); });
-  on('[data-goto]', el => { state.selected = el.dataset.goto === key(today()) ? null : el.dataset.goto; state.screen = 'home'; state.moving = false; render(); });
+  on('[data-split]', el => { state.split = Number(el.dataset.split); store.set('split', state.split); state.moving = false; state.editing = false; render(); });
+  on('[data-goto]', el => { state.selected = el.dataset.goto === key(today()) ? null : el.dataset.goto; state.screen = 'home'; state.moving = false; state.editing = false; render(); });
   on('[data-exercise]', el => { state.exercise = el.dataset.exercise; state.detailFrom = el.dataset.from || null; state.screen = 'detail'; render(); });
   on('[data-back]', () => { state.screen = 'home'; state.exercise = null; render(); });
   on('[data-activate]', el => { activateDay(el.dataset.activate); render(); });
   on('[data-deactivate]', el => { deactivateDay(el.dataset.deactivate); render(); });
   on('[data-history]', () => { state.screen = 'history'; loadHistory(); render(); });
+
+  on('[data-daylog]', el => { state.logDate = el.dataset.daylog; state.screen = 'daylog'; render(); });
+  on('[data-disable]', el => { disableDay(el.dataset.disable); render(); });
+  on('[data-edit]', el => { state.editing = el.dataset.edit === '1'; render(); });
+  on('[data-group]', el => {
+    if (!toggleGroup(dateOf(el.dataset.d), el.dataset.group)) alert('A day needs at least one muscle group. Turn the day off instead.');
+    render();
+  });
+  on('[data-addcardio]', el => { addCardioToDay(dateOf(el.dataset.d), el.dataset.addcardio); render(); });
+  on('[data-savecardio]', el => {
+    const t = (document.getElementById('ctype').value || '').trim();
+    const m = parseInt(document.getElementById('cmins').value, 10);
+    if (!t || !m || m < 5) { alert('Give it a name and a length of at least 5 minutes.'); return; }
+    addCardioToDay(dateOf(el.dataset.d), addCustomCardio(t, m));
+    render();
+  });
 
   on('[data-move]', el => { state.moving = el.dataset.move === '1'; render(); });
   on('[data-swapday]', el => { swapDays(isoDay(viewedDate()), Number(el.dataset.swapday)); state.moving = false; render(); });
@@ -2237,6 +2925,7 @@ document.addEventListener('visibilitychange', () => {
   render();
 });
 
+loadCustomCardio();
 session.load();
 if (session.data && session.data.phase !== 'done') { state.screen = 'run'; holdScreen(); }
 sync.flush();
