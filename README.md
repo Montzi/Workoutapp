@@ -2,7 +2,7 @@
 
 Simple workouts. Real results. A dumbbell only training app that knows what day it is.
 
-Version 9. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
+Version 10. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
 
 ## The repo
 
@@ -140,20 +140,33 @@ Cardio behaves differently inside a workout. No weight picker, no sets, no rest 
 shows the target length, the session clock keeps running, and you log it when you come back.
 In the time estimate a cardio block counts its full length plus the usual changeover minutes.
 
+## Getting out of a panel
+
+**Muscle groups** and **Move day** both open a panel with a cross in the top right and a
+"Back to the day" link at the bottom. Turning a day off also closes whatever panel was open, so you
+land back on the day card rather than in a half open editor.
+
 ## Turning a day on and off
 
 - A scheduled day has **Turn this day off**. It becomes a rest day for that date only, and the
   weekly schedule underneath is untouched.
-- A day that is off, or a normal rest day, has **Activate this day**, which builds a session from
-  the muscle groups you have not trained this week.
-- A day you turned off also gets **Put the schedule back**.
+- A day you turned off leads with **Turn this day back on**, and says plainly that the weekly
+  schedule underneath is untouched.
+- A normal rest day has **Activate this day**, which builds a session from the muscle groups you
+  have not trained this week. A day that is off can be used that way too.
 
 Miss Monday, turn it off, activate Tuesday, and the week catches up.
 
 ## The week band
 
 Under the wordmark: the ISO week number, how many of the seven days you have logged, and a row
-of seven dates. A logged day gets a check mark and goes dark. Tap any date to see that day's log,
+of seven dates. A logged day gets a check mark and goes dark.
+
+**Days that have not happened yet are dimmed and cannot be tapped.** There is nothing to log for a
+day that has not arrived. Planning happens in the numbered week strip lower down, which stays fully
+clickable in both directions.
+
+Tap any date up to today to see that day's log,
 the total time, the set count, and every exercise with its set count and last weight used.
 Sets you marked done rather than worked through are flagged as such.
 
