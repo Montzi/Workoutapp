@@ -646,6 +646,8 @@ img { max-width: 100%; display: block; }
 }
 
 .panel-x:active { background: rgba(255, 255, 255, 0.08); }
+.sync-state { padding: 4px 0 4px 8px; }
+.sync-state.is-pending { color: var(--blue); }
 
 #boot{margin:24px 16px;padding:16px;max-width:480px;border:1px solid #1e9bff;border-radius:10px;
 background:#10151d;color:#e8edf3;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
@@ -2131,6 +2133,8 @@ const sync = {
 
   queue() { return store.get('queue', []); },
 
+  pending() { return this.queue().length > 0; },
+
   push(record) {
     const q = this.queue();
     q.push(Object.assign({ athlete: ATHLETE, at: new Date().toISOString() }, record));
@@ -2183,10 +2187,13 @@ const sync = {
 
   label() {
     const n = this.queue().length;
+    if (n) return this.status === 'sending' ? 'Saving ' + n : n + ' to sync';
     if (this.status === 'sending') return 'Saving';
-    if (n) return n + ' to sync';
     return 'Saved';
-  }
+  },
+
+  /* Every send is retried until it lands. Nothing leaves the queue unacknowledged. */
+  retry() { this.flush(); }
 };
 
 window.addEventListener('online', () => sync.flush());
@@ -3067,7 +3074,7 @@ function welcomeBar() {
       ${live ? `<div class="live">
           <span class="live-clock" id="elapsed">${clock(session.elapsed)}</span>
           <span class="live-msg" id="motivate">${esc(session.motivation())}</span>
-        </div>` : `<p class="sync-state" id="syncstate">${esc(sync.label())}</p>`}
+        </div>` : `<button class="sync-state ${sync.pending() ? 'is-pending' : ''}" id="syncstate" data-sync="1">${esc(sync.label())}</button>`}
     </header>`;
 }
 
@@ -3348,8 +3355,8 @@ function weekBand(viewed) {
   return `<section class="band">
     <p class="band-head"><span class="band-week">Week ${isoWeek(viewed)}</span>
       <span>${done} of 7 days logged</span></p>
-    <p class="band-note">Tap a day up to today to see or add its log. Plan ahead in the week below.</p>
     <div class="band-grid">${cells}</div>
+    <p class="band-note">Tap a day up to today to see or add its log. Plan ahead in the week below.</p>
   </section>`;
 }
 
@@ -3951,6 +3958,7 @@ function bind() {
     state.screen = 'daylog'; render();
   });
 
+  on('[data-sync]', () => { sync.flush(); render(); });
   on('[data-zoomposter]', el => {
     const img = el.closest('.poster').querySelector('img');
     state.zoom = img ? img.getAttribute('src') : null;
@@ -4057,6 +4065,7 @@ function beep(freq, len) {
 
 let lastBeep = null;
 let lastCd = null;
+let lastFlush = 0;
 
 setInterval(() => {
   if (state.screen === 'countdown' && state.pending) {
@@ -4070,7 +4079,12 @@ setInterval(() => {
   }
 
   const s = document.getElementById('syncstate');
-  if (s) s.textContent = sync.label();
+  if (s) {
+    s.textContent = sync.label();
+    s.classList.toggle('is-pending', sync.pending());
+  }
+  /* Retry anything stuck in the queue every half minute. */
+  if (sync.pending() && Date.now() - lastFlush > 30000) { lastFlush = Date.now(); sync.flush(); }
   if (!session.data || session.data.phase === 'done') return;
 
   const el = document.getElementById('elapsed');
@@ -4090,6 +4104,7 @@ setInterval(() => {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
+  sync.flush();
   if (state.screen === 'run' && session.data) holdScreen();
   render();
 });
