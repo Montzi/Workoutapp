@@ -2,7 +2,7 @@
 
 Simple workouts. Real results. A dumbbell only training app that knows what day it is.
 
-Version 8. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
+Version 9. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
 
 ## The repo
 
@@ -222,6 +222,48 @@ Everything lives in the one `<script>` block in `index.html`. Search for:
 
 Editing by hand and then asking for a rebuilt file will lose your edits. Tell me the change instead.
 
+## Days number themselves
+
+Days are not labelled with a fixed number any more. The number is simply where the day falls
+among the training days of that week, counted Monday to Sunday.
+
+Train Monday, Wednesday and Friday and they read 1, 2, 3. Activate Tuesday and it becomes 2,
+Wednesday moves to 3, Friday to 4. Log a workout on a day that was not scheduled and that day
+starts counting too. Nothing to maintain, it recalculates every time the screen draws.
+
+## Three schedules
+
+**3 days**, **5 days**, and now **Custom**. Custom starts empty and gives you a row of weekdays to
+tap. Each day you turn on gets three exercises per muscle group from a rotation, and you edit its
+muscle groups from the day itself like any other. The three schedules are stored separately, so
+switching between them never loses your edits to the others.
+
+## Adding and editing past workouts
+
+Every exercise now has its own **sets** and **weight**, adjustable with steppers. Sets go 1 to 10,
+weight in 5 lb steps up to 55. You can:
+
+- add or remove a whole muscle group with the chips at the top
+- add a single exercise with the **+ Chest**, **+ Back** buttons, which only offer exercises not
+  already in the list
+- remove any exercise with the cross
+- set the duration in five minute steps
+
+A day that already has a workout opens the same screen in edit mode, prefilled from the log, so
+correcting a duration or a weight after the fact is the same flow. Edited entries reach your sheet
+flagged `edited` rather than `added later`.
+
+## The session names itself after what you did
+
+If Tuesday was planned as Chest and Back and you only did chest, finishing the session titles it
+**Chest**. The day card, the log, and the row in your sheet all say Chest. The planned title is
+only a starting point.
+
+## A finished day shows its work
+
+Under the week strip, a completed day lists every exercise with its set count and the weight used,
+plus buttons to edit the workout or open the full log.
+
 ## Starting a workout
 
 Pressing **Start workout** gives you ten seconds before the first set, counting down on screen with
@@ -230,7 +272,9 @@ starting a session. The session clock starts when the countdown ends, not when y
 
 ## Music
 
-A player sits at the top of the countdown and the workout. Play and pause, a skip button, a volume
+A player sits on the main screen, the countdown and the workout. You can start music without
+starting a session, and starting a session while music is playing does not interrupt it. The audio
+element lives outside the screen, so redrawing never touches playback. Play and pause, a skip button, a volume
 slider, and a station list.
 
 Five live stations, all from SomaFM, which is free and listener supported: **Fluid** for
