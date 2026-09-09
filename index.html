@@ -57,13 +57,19 @@ img { max-width: 100%; display: block; }
   position: sticky; top: 0; z-index: 20;
   background: linear-gradient(180deg, var(--bg) 76%, rgba(8, 11, 16, 0));
   padding: 14px 0 12px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
 }
 
-.hello { margin: 0; font-size: 14px; font-variation-settings: 'wdth' 104, 'wght' 600; color: var(--text); }
+.hello {
+  margin: 0; font-size: 14px; font-variation-settings: 'wdth' 104, 'wght' 600; color: var(--text);
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .sync-state { margin: 0; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
 
-.live { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.live {
+  flex: 0 1 auto; min-width: 0; max-width: 62%;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+}
 
 .live-clock {
   font-size: 18px; font-variation-settings: 'wdth' 112, 'wght' 800;
@@ -648,6 +654,87 @@ img { max-width: 100%; display: block; }
 .panel-x:active { background: rgba(255, 255, 255, 0.08); }
 .sync-state { padding: 4px 0 4px 8px; }
 .sync-state.is-pending { color: var(--blue); }
+
+/* ---------- resting ---------- */
+
+.detail-stage.is-rest { background: linear-gradient(180deg, #101c2a, var(--panel)); }
+.detail-stage.is-rest .bd-fill { fill: #33404d; stroke: #4c5c6c; }
+.detail-stage.is-rest .bd-far { fill: #212b35; stroke: #2e3a45; }
+.detail-stage.is-rest .bd-neck { stroke: #33404d; }
+
+/* ---------- tester mode ---------- */
+
+.tester {
+  margin: 14px 0 4px; padding: 14px 16px 6px;
+  border: 1px dashed rgba(30, 155, 255, 0.5); border-radius: var(--radius);
+  background: rgba(30, 155, 255, 0.06);
+}
+
+.tester-t {
+  margin: 0 0 4px; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--blue); font-variation-settings: 'wght' 750;
+}
+
+.tester-s { margin: 0; font-size: 12px; color: var(--muted); }
+.tester-link { margin-top: 26px; opacity: 0.55; font-size: 12px; }
+.poster.is-compact { margin-top: 8px; }
+
+/* ---------- the exercise is done ---------- */
+
+.cheer { position: relative; padding: 18px 0 8px; text-align: center; overflow: hidden; }
+
+.confetti { position: absolute; inset: -20px 0 0; pointer-events: none; overflow: hidden; }
+
+.confetti i {
+  position: absolute; top: -24px; display: block;
+  animation-name: fall; animation-timing-function: linear; animation-iteration-count: 2;
+}
+
+@keyframes fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(420px) rotate(var(--spin, 540deg)); opacity: 0; }
+}
+
+.cheer-h {
+  position: relative; margin: 8px 0 2px; font-size: 44px; line-height: 1;
+  font-variation-settings: 'wdth' 116, 'wght' 800; color: var(--blue);
+  text-shadow: 0 0 44px var(--blue-glow);
+}
+
+.cheer-sub { position: relative; margin: 0 0 20px; font-size: 13px; color: var(--muted); }
+
+.upnext {
+  position: relative; text-align: left;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--panel); padding: 12px 14px;
+}
+
+.upnext-l {
+  margin: 0 0 8px; font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--blue); font-variation-settings: 'wght' 750;
+}
+
+.upnext-row { display: flex; align-items: center; gap: 12px; }
+.upnext-fig { flex: 0 0 62px; width: 62px; }
+.upnext-fig .figure { width: 100%; height: auto; display: block; }
+.upnext-n { display: block; font-size: 17px; color: var(--white); font-variation-settings: 'wdth' 106, 'wght' 700; }
+.upnext-m { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.cheer-cd { position: relative; margin: 16px 0 0; font-size: 13px; color: var(--muted); }
+
+.cheer-cd strong {
+  display: inline-block; min-width: 30px;
+  font-size: 26px; color: var(--blue); font-variant-numeric: tabular-nums;
+  font-variation-settings: 'wdth' 112, 'wght' 800; vertical-align: -3px;
+}
+
+.cheer .hero-actions { position: relative; }
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti { display: none; }
+}
 
 #boot{margin:24px 16px;padding:16px;max-width:480px;border:1px solid #1e9bff;border-radius:10px;
 background:#10151d;color:#e8edf3;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
@@ -1711,7 +1798,29 @@ const EXERCISES = [
   }
 ];
 
+/* Shown between sets. Not an exercise, so it never appears in any list. */
+const REST_FIGURE = {
+  id: '__rest', name: 'Rest', group: 'core', tempo: 4.6,
+  sets: 0, reps: '', desc: '', cues: [],
+  muscles: { primary: [], secondary: [] },
+  pose: {
+    props: [FLOOR, { p1: [76, 86], p2: [126, 86] }, { p1: [86, 86], p2: [86, 112] }, { p1: [118, 86], p2: [118, 112] }],
+    head: [74, 47], neck: [80, 59], hip: [94, 86],
+    near: { shoulder: [80, 59], elbow: [78, 74], hand: [72, 88], knee: [68, 88], foot: [60, 116] },
+    far:  { shoulder: [83, 62], elbow: [81, 77], hand: [75, 91], knee: [72, 91], foot: [64, 116] },
+    db: []
+  },
+  end: {
+    head: [73, 41], neck: [80, 54],
+    near: { shoulder: [80, 54], elbow: [78, 70], hand: [72, 86] },
+    far:  { shoulder: [83, 57], elbow: [81, 73], hand: [75, 89] }
+  }
+};
+
+const EXTRA_FIGURES = { __rest: REST_FIGURE };
+
 const byId = id => EXERCISES.find(e => e.id === id);
+const figureById = id => byId(id) || EXTRA_FIGURES[id] || null;
 const byGroup = g => EXERCISES.filter(e => e.group === g);
 
 
@@ -1910,7 +2019,7 @@ let animating = false;
 function tickFigures(now) {
   const svgs = document.querySelectorAll('svg.figure');
   svgs.forEach(svg => {
-    const ex = byId(svg.dataset.ex);
+    const ex = figureById(svg.dataset.ex);
     if (!ex) return;
     const period = (ex.tempo || 2.8) * 1000;
     const phase = Number(svg.dataset.phase) || 0;
@@ -2117,15 +2226,34 @@ function paintBody(svg, ex, t) {
 
 const SYNC_URL = 'https://script.google.com/macros/s/AKfycbzQjg4Y9UtO5RPVnd6PvoAlVgOFznJHgZI3vCRGfXoGYg1nCDz6qM72_gSOZMVWG8Yi/exec';
 
+/* Tester mode. Anyone you send the link to gets their own sandbox: a separate
+   storage area and no writes to your sheet at all. */
+const TESTER = (function () {
+  try {
+    if (/(^|[?&#])tester\b/i.test(location.search + location.hash)) return true;
+    return localStorage.getItem('rack.testerMode') === '1';
+  } catch (e) { return false; }
+})();
+
+const STORE_PREFIX = TESTER ? 'rack.demo.' : 'rack.';
+
 const store = {
   get(k, fallback) {
-    try { const v = localStorage.getItem('rack.' + k); return v === null ? fallback : JSON.parse(v); }
+    try { const v = localStorage.getItem(STORE_PREFIX + k); return v === null ? fallback : JSON.parse(v); }
     catch (e) { return fallback; }
   },
   set(k, v) {
-    try { localStorage.setItem('rack.' + k, JSON.stringify(v)); } catch (e) { /* private mode */ }
+    try { localStorage.setItem(STORE_PREFIX + k, JSON.stringify(v)); } catch (e) { /* private mode */ }
   }
 };
+
+function setTesterMode(on) {
+  try {
+    if (on) localStorage.setItem('rack.testerMode', '1');
+    else localStorage.removeItem('rack.testerMode');
+  } catch (e) {}
+  location.replace(location.pathname);
+}
 
 const sync = {
   status: 'idle',           // idle | sending | queued | offline
@@ -2136,6 +2264,7 @@ const sync = {
   pending() { return this.queue().length > 0; },
 
   push(record) {
+    if (TESTER) return;   // a tester never writes to the owner's sheet
     const q = this.queue();
     q.push(Object.assign({ athlete: ATHLETE, at: new Date().toISOString() }, record));
     store.set('queue', q);
@@ -2152,6 +2281,7 @@ const sync = {
   },
 
   async flush() {
+    if (TESTER) { this.set('idle'); return; }
     if (this.status === 'sending') return;
     let q = this.queue();
     if (!q.length) { this.set('idle'); return; }
@@ -2186,6 +2316,7 @@ const sync = {
   },
 
   label() {
+    if (TESTER) return 'Not saving';
     const n = this.queue().length;
     if (n) return this.status === 'sending' ? 'Saving ' + n : n + ' to sync';
     if (this.status === 'sending') return 'Saving';
@@ -2393,6 +2524,12 @@ const WORK_SEC_PER_SET = 40;      // used only for the time estimate
 const TRANSITION_SEC = 75;        // walking over, changing the bench, picking bells
 const GRACE_SEC = 300;            // bathroom, water, someone using your rack
 
+const CHEER_SEC = 10;
+
+const CHEERS = [
+  'Hurray!', 'Nice work!', 'That is the one!', 'Clean sweep!', 'Got it done!', 'Yes!'
+];
+
 const MOTIVATION = [
   'You got this', 'One set at a time', 'Own the last two reps', 'Slow on the way down',
   'Breathe, then go', 'Nobody is coming to lift it for you', 'This is the easy part',
@@ -2445,6 +2582,8 @@ const session = {
       setsDone: 0,
       restEndsAt: null,
       startedAt: Date.now(),
+      cheerEndsAt: null,
+      cheerLine: '',
       logged: []
     };
     this.save();
@@ -2506,7 +2645,11 @@ const session = {
     this.logSet(ex, false);
 
     if (this.data.setsDone >= ex.sets) {
-      this.nextExercise();
+      /* Every set on this exercise is in. Take a beat and celebrate it. */
+      this.data.phase = 'cheer';
+      this.data.cheerEndsAt = Date.now() + CHEER_SEC * 1000;
+      this.data.cheerLine = CHEERS[Math.floor(Math.random() * CHEERS.length)];
+      this.data.restEndsAt = null;
     } else {
       this.data.phase = 'rest';
       this.data.restEndsAt = Date.now() + GROUPS[ex.group].rest * 1000;
@@ -2518,6 +2661,7 @@ const session = {
   undoSet() {
     const last = this.data.logged.pop();
     if (!last) return false;
+    this.data.cheerEndsAt = null;
     sync.dropLast(r => r.type === 'set' && r.exerciseId === last.exerciseId && r.set === last.set);
     const at = this.data.order.indexOf(last.exerciseId);
     if (at >= 0) this.data.idx = at;
@@ -2536,10 +2680,22 @@ const session = {
     this.save();
   },
 
+  cheerLeft() {
+    return this.data.cheerEndsAt ? (this.data.cheerEndsAt - Date.now()) / 1000 : 0;
+  },
+
+  holdCheer() { this.data.cheerEndsAt = null; this.save(); },
+
+  get upNext() {
+    const id = this.data.order[this.data.idx + 1];
+    return id ? byId(id) : null;
+  },
+
   nextExercise() {
     this.data.idx++;
     this.data.setsDone = 0;
     this.data.restEndsAt = null;
+    this.data.cheerEndsAt = null;
     this.data.phase = this.data.idx >= this.data.order.length ? 'done' : 'proposed';
     if (this.data.phase === 'done') this.finish();
     this.save();
@@ -2650,7 +2806,10 @@ const state = {
 const IMG_DIR = 'images/';
 const ALT_IMG_DIR = 'Dumbbelly/';
 
+const WHO = TESTER ? 'Tester' : ATHLETE;
+
 function avatar() {
+  if (TESTER) return '';
   return `<img class="hero-avatar" src="${IMG_DIR}avatar.png" alt="" aria-hidden="true"
     data-alt="avatar.png"
     onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt='';}else{this.remove();}">`;
@@ -2673,6 +2832,19 @@ function posterBlock(ex, opts) {
            onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt='';}
                     else{this.closest('.poster').classList.add('is-missing');}">
       <div class="poster-fallback detail-stage">${o.body ? bodySVG(ex) : figureSVG(ex, {})}</div>
+      <button class="poster-zoom" data-zoomposter="1">Expand</button>
+    </div>`;
+}
+
+/* Just the picture, for spots that already have a figure above them. */
+function posterOnly(ex) {
+  if (!ex.img) return '';
+  const first = IMG_DIR + ex.img;
+  const second = ALT_IMG_DIR + ex.img;
+  return `<div class="poster is-compact" data-poster="1">
+      <img src="${first}" alt="${esc(ex.name)} technique guide" data-alt="${second}"
+           onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt='';}
+                    else{this.closest('.poster').remove();}">
       <button class="poster-zoom" data-zoomposter="1">Expand</button>
     </div>`;
 }
@@ -3070,7 +3242,7 @@ function welcomeBar() {
   const live = session.data && session.data.phase !== 'done';
   return `
     <header class="welcome">
-      <p class="hello">Welcome, ${esc(ATHLETE)}</p>
+      <p class="hello">Welcome, ${esc(WHO)}</p>
       ${live ? `<div class="live">
           <span class="live-clock" id="elapsed">${clock(session.elapsed)}</span>
           <span class="live-msg" id="motivate">${esc(session.motivation())}</span>
@@ -3101,10 +3273,12 @@ function homeView() {
     ${state.moving ? dayMover(d) : ''}
     ${state.editing ? groupEditor(d) : ''}
     ${splitSwitch()}
+    ${TESTER ? testerBanner() : ''}
     ${weekStrip(d)}
     ${musicBar()}
     ${logged ? performedList(logged) : ''}
-    ${plan && !logged ? exerciseList(d) : ''}`;
+    ${plan && !logged ? exerciseList(d) : ''}
+    ${testerFooter()}`;
 }
 
 function resumeBar() {
@@ -3305,6 +3479,22 @@ function exerciseList(d) {
   }).join('');
 
   return `<div class="section-head"><h2>The session</h2><span>Tap to open, or reorder</span></div>${blocks}`;
+}
+
+/* ---------- tester mode ---------- */
+
+function testerBanner() {
+  return `<section class="tester">
+    <p class="tester-t">Tester mode</p>
+    <p class="tester-s">Everything works. Nothing you do here is saved to ${esc(ATHLETE)}'s log or
+      sheet, and it is kept separate from any real data on this phone.</p>
+    <button class="linky" data-tester="0">Leave tester mode</button>
+  </section>`;
+}
+
+function testerFooter() {
+  if (TESTER) return '';
+  return `<button class="linky tester-link" data-tester="1">Switch to tester mode</button>`;
 }
 
 /* ---------- what you actually did ---------- */
@@ -3767,11 +3957,15 @@ function runView() {
       ${session.doneSets ? `<button class="callit" data-callit="1">Call it a day &middot; finish with ${session.doneSets} ${session.doneSets === 1 ? 'set' : 'sets'} logged</button>` : ''}
       <div class="bar"><span style="width:${pct}%"></span></div>
       <p class="bar-note">${session.doneSets} of ${session.totalSets} sets done in this session</p>
-      ${d.phase === 'proposed' ? posterBlock(ex, { body: true }) : `<div class="detail-stage">${bodySVG(ex)}</div>`}
-      <h1 class="run-name">${esc(ex.name)}</h1>
+      ${d.phase === 'cheer' ? '' : (d.phase === 'proposed'
+        ? posterBlock(ex, { body: true })
+        : `<div class="detail-stage${d.phase === 'rest' ? ' is-rest' : ''}">${bodySVG(d.phase === 'rest' ? REST_FIGURE : ex)}</div>`)}
+      ${d.phase === 'set' ? posterOnly(ex) : ''}
+      ${d.phase === 'cheer' ? '' : `<h1 class="run-name">${esc(ex.name)}</h1>`}
       ${d.phase === 'proposed' ? proposedBlock(ex) : ''}
       ${d.phase === 'set' ? setBlock(ex, setNo) : ''}
       ${d.phase === 'rest' ? restBlock(ex, setNo) : ''}
+      ${d.phase === 'cheer' ? cheerBlock(ex) : ''}
     </div>
     ${state.zoom ? lightbox() : ''}`;
 }
@@ -3782,6 +3976,65 @@ function undoRow() {
   const last = session.data.logged[session.data.logged.length - 1];
   return `<button class="linky undo" data-undo="1">
     &larr; Undo ${esc(last.exerciseName)} set ${last.set}${last.weight ? ' at ' + last.weight + ' lb' : ''}</button>`;
+}
+
+const CONFETTI_COLOURS = ['#1e9bff', '#7cc6ff', '#ffffff', '#0d6fd1', '#bfe3ff'];
+
+function confetti() {
+  let out = '';
+  for (let i = 0; i < 40; i++) {
+    const left = Math.round(Math.random() * 100);
+    const delay = (Math.random() * 1.6).toFixed(2);
+    const dur = (1.9 + Math.random() * 1.7).toFixed(2);
+    const size = 5 + Math.round(Math.random() * 5);
+    const c = CONFETTI_COLOURS[i % CONFETTI_COLOURS.length];
+    const spin = Math.round(360 + Math.random() * 720);
+    const round = Math.random() > 0.6 ? '50%' : '1px';
+    out += `<i style="left:${left}%;width:${size}px;height:${size + 4}px;background:${c};
+      border-radius:${round};animation-delay:${delay}s;animation-duration:${dur}s;
+      --spin:${spin}deg"></i>`;
+  }
+  return `<div class="confetti" aria-hidden="true">${out}</div>`;
+}
+
+function cheerBlock(ex) {
+  const d = session.data;
+  const next = session.upNext;
+  const holding = !d.cheerEndsAt;
+
+  const upNext = next
+    ? `<div class="upnext">
+        <p class="upnext-l">Up next</p>
+        <div class="upnext-row">
+          <span class="upnext-fig">${figureSVG(next, {})}</span>
+          <span>
+            <span class="upnext-n">${esc(next.name)}</span>
+            <span class="upnext-m">${next.cardio
+              ? esc(next.reps)
+              : `${next.sets} sets &middot; ${esc(next.reps)} reps &middot; ${esc(GROUPS[next.group].name)}`}</span>
+          </span>
+        </div>
+      </div>`
+    : `<div class="upnext">
+        <p class="upnext-l">Last one</p>
+        <div class="upnext-row"><span><span class="upnext-n">That was the whole session</span></span></div>
+      </div>`;
+
+  return `
+    <div class="cheer">
+      ${confetti()}
+      <p class="cheer-h">${esc(d.cheerLine || 'Hurray!')}</p>
+      <p class="cheer-sub">${esc(ex.name)} done &middot; ${ex.sets} of ${ex.sets} sets</p>
+      ${upNext}
+      <p class="cheer-cd">${holding
+        ? 'Take your time. Go when you are ready.'
+        : `Starting in <strong id="cheercount">${Math.max(0, Math.ceil(session.cheerLeft()))}</strong>`}</p>
+      <div class="hero-actions">
+        <button class="btn" data-cheernow="1">${next ? 'Start it now' : 'Finish the session'}</button>
+        ${holding ? '' : '<button class="btn btn-quiet" data-cheerhold="1">Hold on</button>'}
+      </div>
+      ${undoRow()}
+    </div>`;
 }
 
 function weightPicker(ex) {
@@ -3838,7 +4091,7 @@ function setBlock(ex, setNo) {
 function restBlock(ex, setNo) {
   return `
     <div class="rest">
-      <p class="rest-label">Rest</p>
+      <p class="rest-label">Rest &middot; breathe</p>
       <p class="rest-clock" id="restcount">${clock(session.restLeft())}</p>
       <p class="rest-next">Set ${setNo} of ${ex.sets} starts automatically</p>
     </div>
@@ -3959,6 +4212,7 @@ function bind() {
   });
 
   on('[data-sync]', () => { sync.flush(); render(); });
+  on('[data-tester]', el => setTesterMode(el.dataset.tester === '1'));
   on('[data-zoomposter]', el => {
     const img = el.closest('.poster').querySelector('img');
     state.zoom = img ? img.getAttribute('src') : null;
@@ -4010,7 +4264,13 @@ function bind() {
   on('[data-swap]', () => { if (!session.swap()) alert('No other exercise left for this muscle group.'); render(); });
   on('[data-skipex]', () => { session.skipExercise(); render(); });
   on('[data-markdone]', () => { session.completeExercise(); render(); });
-  on('[data-done]', () => { session.completeSet(); render(); });
+  on('[data-done]', () => {
+    session.completeSet();
+    if (session.data.phase === 'cheer') applause();
+    render();
+  });
+  on('[data-cheernow]', () => { session.nextExercise(); render(); });
+  on('[data-cheerhold]', () => { session.holdCheer(); render(); });
   on('[data-skiprest]', () => { session.skipRest(); render(); });
   on('[data-addrest]', el => { session.addRest(Number(el.dataset.addrest)); render(); });
   on('[data-exit]', () => { state.screen = 'home'; releaseScreen(); render(); });
@@ -4063,6 +4323,50 @@ function beep(freq, len) {
   } catch (e) { /* no audio, no problem */ }
 }
 
+function applause() {
+  try {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return;
+    const ctx = new C();
+    const out = ctx.createGain();
+    out.gain.value = 0.5;
+    out.connect(ctx.destination);
+
+    /* A clap is a short burst of filtered noise. A crowd is a lot of them,
+       swelling and then thinning out. */
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.5);
+
+    const now = ctx.currentTime;
+    for (let i = 0; i < 90; i++) {
+      const t = now + Math.random() * 1.8;
+      const swell = Math.min(1, (t - now) / 0.35) * Math.max(0.15, 1 - (t - now) / 2.2);
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 1100 + Math.random() * 2600;
+      bp.Q.value = 0.7;
+      const g = ctx.createGain();
+      g.gain.value = (0.05 + Math.random() * 0.09) * swell;
+      src.connect(bp); bp.connect(g); g.connect(out);
+      src.start(t);
+    }
+
+    /* Three notes over the top so it reads as a win, not just noise. */
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      const t = now + i * 0.11;
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.6);
+    });
+  } catch (e) { /* no audio, no problem */ }
+}
+
 let lastBeep = null;
 let lastCd = null;
 let lastFlush = 0;
@@ -4091,6 +4395,15 @@ setInterval(() => {
   if (el) el.textContent = clock(session.elapsed);
   const mv = document.getElementById('motivate');
   if (mv) mv.textContent = session.motivation();
+
+  if (session.data.phase === 'cheer' && session.data.cheerEndsAt) {
+    const left = session.cheerLeft();
+    const cc = document.getElementById('cheercount');
+    const n = Math.max(0, Math.ceil(left));
+    if (cc && cc.textContent !== String(n)) cc.textContent = n;
+    if (left <= 0) { session.nextExercise(); render(); }
+    return;
+  }
 
   if (session.data.phase === 'rest') {
     const left = session.restLeft();
