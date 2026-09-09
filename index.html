@@ -2255,6 +2255,11 @@ function setTesterMode(on) {
   location.replace(location.pathname);
 }
 
+/* Two saves inside the same millisecond must not share an id, or the sheet
+   cannot tell which one is newer. */
+let runSeq = 0;
+function newRun() { return String(Date.now()) + '-' + (++runSeq).toString(36); }
+
 const sync = {
   status: 'idle',           // idle | sending | queued | offline
   onchange: null,
@@ -2327,7 +2332,131 @@ const sync = {
   retry() { this.flush(); }
 };
 
-window.addEventListener('online', () => sync.flush());
+/* Settings that make the app yours: schedule, exercise order, weights, music.
+   Not the workout log, that has its own rows. Last write wins across devices. */
+const PREF_KEYS = ['split', 'plans', 'orders', 'overrides', 'weights', 'customCardio', 'music'];
+
+const remote = {
+  ready: false,
+  status: 'idle',        // idle | pulling | error
+  lastPull: 0,
+  lastPrefs: '',
+
+  prefsBlob() {
+    const o = {};
+    PREF_KEYS.forEach(k => { const v = store.get(k, null); if (v !== null) o[k] = v; });
+    return JSON.stringify(o);
+  },
+
+  applyPrefs(json) {
+    let o;
+    try { o = JSON.parse(json); } catch (e) { return false; }
+    if (!o || typeof o !== 'object') return false;
+    PREF_KEYS.forEach(k => { if (k in o) store.set(k, o[k]); });
+    this.lastPrefs = this.prefsBlob();
+    return true;
+  },
+
+  pushPrefs() {
+    if (TESTER || !this.ready) return;
+    const blob = this.prefsBlob();
+    if (blob === this.lastPrefs) return;
+    this.lastPrefs = blob;
+    store.set('prefsAt', Date.now());
+    sync.push({ type: 'prefs', data: blob });
+  },
+
+  /* Rebuild the local log from the sheet, so a second device sees the same history. */
+  async pull() {
+    if (TESTER) { this.ready = true; return; }
+    if (this.status === 'pulling') return;
+    this.status = 'pulling';
+    try {
+      const res = await fetch(SYNC_URL + '?action=all', { redirect: 'follow' });
+      const j = await res.json();
+      if (!j || !j.ok) throw new Error('bad response');
+      this.merge(j);
+      this.status = 'idle';
+      this.lastPull = Date.now();
+    } catch (e) {
+      this.status = 'error';
+    }
+    this.ready = true;
+    this.lastPrefs = this.prefsBlob();
+    if (this.onchange) this.onchange();
+  },
+
+  merge(j) {
+    const sessions = j.sessions || [];
+    const sets = j.sets || [];
+
+    /* For each date keep only the newest run. An edit writes a new run, so the
+       old rows are ignored rather than added on top. */
+    const newest = {};
+    sessions.concat(sets).forEach(r => {
+      if (!r.date) return;
+      const at = Number(r.at) || 0;
+      const cur = newest[r.date];
+      if (!cur || at > cur.at) newest[r.date] = { run: String(r.run || ''), at };
+    });
+    const runOf = {};
+    Object.keys(newest).forEach(d => { runOf[d] = newest[d].run; });
+
+    const built = {};
+    sets.forEach(r => {
+      if (!r.date || String(r.run || '') !== runOf[r.date]) return;
+      const day = built[r.date] || (built[r.date] = { entries: [] });
+      day.entries.push({
+        exerciseName: r.name, group: r.group, set: Number(r.set) || 1,
+        reps: r.reps, weight: r.weight === '' ? '' : Number(r.weight) || '',
+        elapsedSec: 0, marked: r.note || ''
+      });
+    });
+
+    sessions.forEach(r => {
+      if (!r.date || String(r.run || '') !== runOf[r.date]) return;
+      const day = built[r.date] || (built[r.date] = { entries: [] });
+      day.title = r.title;
+      day.durationSec = Number(r.durationSec) || 0;
+      day.groups = String(r.groups || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+      day.sets = Number(r.sets) || day.entries.length;
+    });
+
+    /* Anything still waiting to go out is newer than the sheet. Leave it alone. */
+    const held = new Set();
+    sync.queue().forEach(r => { if (r.dateKey) held.add(r.dateKey); });
+
+    const log = store.get('log', {});
+    Object.keys(built).forEach(d => {
+      if (held.has(d)) return;
+      const b = built[d];
+      if (!b.entries.length && !b.title) return;
+      log[d] = {
+        title: b.title || '',
+        groups: b.groups || [...new Set(b.entries.map(e => e.group))],
+        durationSec: b.durationSec || 0,
+        sets: b.sets || b.entries.length,
+        exercises: [...new Set(b.entries.map(e => e.exerciseName))],
+        entries: b.entries,
+        finishedAt: d + 'T12:00:00.000Z'
+      };
+    });
+    store.set('log', log);
+
+    if (j.prefs && j.prefs.data && (j.prefs.at || 0) > (store.get('prefsAt', 0) || 0)) {
+      if (this.applyPrefs(j.prefs.data) && typeof onPrefsApplied === 'function') onPrefsApplied();
+      store.set('prefsAt', j.prefs.at);
+    }
+  },
+
+  label() {
+    if (this.status === 'pulling') return 'Syncing';
+    if (this.status === 'error') return 'Offline';
+    return '';
+  }
+};
+
+window.addEventListener('online', () => { sync.flush(); remote.pull(); });
 
 
 /* ===== music.js ===== */
@@ -2582,6 +2711,7 @@ const session = {
       setsDone: 0,
       restEndsAt: null,
       startedAt: Date.now(),
+      run: newRun(),
       cheerEndsAt: null,
       cheerLine: '',
       logged: []
@@ -2629,7 +2759,7 @@ const session = {
       elapsedSec: Math.round(this.elapsed), marked: marked ? 'marked done' : ''
     };
     this.data.logged.push(entry);
-    sync.push(Object.assign({ type: 'set', dateKey: this.data.dateKey, sessionTitle: this.data.title }, entry));
+    sync.push(Object.assign({ type: 'set', dateKey: this.data.dateKey, sessionTitle: this.data.title, run: this.data.run }, entry));
   },
 
   /* Mark the whole exercise done and move on. Logs every set still outstanding. */
@@ -2729,12 +2859,13 @@ const session = {
       title, groups,
       durationSec, sets: d.logged.length,
       exercises: [...new Set(d.logged.map(l => l.exerciseName))],
+      run: d.run,
       finishedAt: new Date().toISOString()
     };
     log[d.dateKey].entries = d.logged;
     store.set('log', log);
     sync.push({
-      type: 'session', dateKey: d.dateKey, title, groups: groups.join('|'),
+      type: 'session', dateKey: d.dateKey, title, groups: groups.join('|'), run: d.run,
       durationSec, sets: d.logged.length,
       exercises: [...new Set(d.logged.map(l => l.exerciseName))].join('|')
     });
@@ -2807,6 +2938,16 @@ const IMG_DIR = 'images/';
 const ALT_IMG_DIR = 'Dumbbelly/';
 
 const WHO = TESTER ? 'Tester' : ATHLETE;
+
+/* What the indicator says. Anything still to send outranks anything still to fetch,
+   because unsent work is the only thing that can actually be lost. */
+function syncLabel() {
+  if (TESTER) return 'Not saving';
+  if (sync.pending() || sync.status === 'sending') return sync.label();
+  if (remote.status === 'pulling') return 'Syncing';
+  if (remote.status === 'error') return 'Offline';
+  return 'Saved';
+}
 
 function avatar() {
   if (TESTER) return '';
@@ -3221,12 +3362,22 @@ function releaseScreen() {
   if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
 }
 
+/* Settings that arrived from the sheet have to reach the live state, not just storage. */
+function onPrefsApplied() {
+  const v = String(store.get('split', 3));
+  state.split = v === 'c' ? 'c' : Number(v) || 3;
+  state.moving = false;
+  state.editing = false;
+  state.swapGroup = null;
+}
+
 /* ---------- render ---------- */
 
 const app = document.getElementById('app');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function render() {
+  remote.pushPrefs();
   if (state.screen === 'countdown' && state.pending) app.innerHTML = countdownView();
   else if (state.screen === 'run' && session.data) app.innerHTML = runView();
   else if (state.screen === 'history') app.innerHTML = historyView();
@@ -3246,7 +3397,7 @@ function welcomeBar() {
       ${live ? `<div class="live">
           <span class="live-clock" id="elapsed">${clock(session.elapsed)}</span>
           <span class="live-msg" id="motivate">${esc(session.motivation())}</span>
-        </div>` : `<button class="sync-state ${sync.pending() ? 'is-pending' : ''}" id="syncstate" data-sync="1">${esc(sync.label())}</button>`}
+        </div>` : `<button class="sync-state ${sync.pending() || remote.status === 'pulling' ? 'is-pending' : ''}" id="syncstate" data-sync="1">${esc(syncLabel())}</button>`}
     </header>`;
 }
 
@@ -3731,18 +3882,19 @@ function saveManual() {
     if (!e.cardio && it.weight) session.setWeight(e.id, it.weight);
   });
 
+  const run = newRun();
   const log = store.get('log', {});
   log[m.dateKey] = {
-    title, groups: doneGroups,
+    title, groups: doneGroups, run,
     durationSec: minutes * 60, sets: entries.length,
     exercises: [...new Set(entries.map(e => e.exerciseName))],
     entries, finishedAt: new Date(m.dateKey + 'T12:00:00').toISOString()
   };
   store.set('log', log);
 
-  entries.forEach(e => sync.push(Object.assign({ type: 'set', dateKey: m.dateKey, sessionTitle: title }, e)));
+  entries.forEach(e => sync.push(Object.assign({ type: 'set', dateKey: m.dateKey, sessionTitle: title, run }, e)));
   sync.push({
-    type: 'session', dateKey: m.dateKey, title, groups: doneGroups.join('|'),
+    type: 'session', dateKey: m.dateKey, title, groups: doneGroups.join('|'), run,
     durationSec: minutes * 60, sets: entries.length,
     exercises: [...new Set(entries.map(e => e.exerciseName))].join('|')
   });
@@ -3895,6 +4047,7 @@ function historyView() {
 }
 
 function loadHistory() {
+  remote.pull();
   state.history = null;
   fetch(SYNC_URL + '?action=history')
     .then(r => r.json())
@@ -4211,7 +4364,7 @@ function bind() {
     state.screen = 'daylog'; render();
   });
 
-  on('[data-sync]', () => { sync.flush(); render(); });
+  on('[data-sync]', () => { sync.flush(); remote.pull(); render(); });
   on('[data-tester]', el => setTesterMode(el.dataset.tester === '1'));
   on('[data-zoomposter]', el => {
     const img = el.closest('.poster').querySelector('img');
@@ -4384,7 +4537,7 @@ setInterval(() => {
 
   const s = document.getElementById('syncstate');
   if (s) {
-    s.textContent = sync.label();
+    s.textContent = syncLabel();
     s.classList.toggle('is-pending', sync.pending());
   }
   /* Retry anything stuck in the queue every half minute. */
@@ -4418,6 +4571,7 @@ setInterval(() => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   sync.flush();
+  if (Date.now() - remote.lastPull > 120000) remote.pull();
   if (state.screen === 'run' && session.data) holdScreen();
   render();
 });
@@ -4426,6 +4580,8 @@ loadCustomCardio();
 session.load();
 if (session.data && session.data.phase !== 'done') { state.screen = 'run'; holdScreen(); }
 sync.flush();
+remote.onchange = () => render();
+remote.pull();
 render();
 
 </script>
