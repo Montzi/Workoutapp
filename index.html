@@ -629,6 +629,24 @@ img { max-width: 100%; display: block; }
 .stepper.is-flat { justify-content: center; min-height: 44px; }
 .chip.is-day { min-width: 62px; text-align: center; justify-content: center; }
 
+/* ---------- future days, panel headers ---------- */
+
+.band-note { margin: 9px 0 0; font-size: 11px; color: var(--muted); text-align: center; }
+.band-day.is-future { opacity: 0.38; cursor: default; }
+.band-day.is-future .bd-n { color: var(--muted); }
+
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.panel-head > :first-child { flex: 1 1 auto; }
+
+.panel-x {
+  flex: 0 0 34px; width: 34px; min-height: 34px; margin-top: -2px;
+  border: 1px solid var(--line); border-radius: 999px;
+  color: var(--muted); font-size: 17px; line-height: 1;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.panel-x:active { background: rgba(255, 255, 255, 0.08); }
+
 #boot{margin:24px 16px;padding:16px;max-width:480px;border:1px solid #1e9bff;border-radius:10px;
 background:#10151d;color:#e8edf3;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
 #boot h2{margin:0 0 8px;font-size:15px}
@@ -3133,14 +3151,18 @@ function heroRest(d) {
       ${avatar()}
       <div class="hero-mark">Rest</div>
       <h1 class="hero-title">${isDisabled(d) ? 'Day turned off' : 'Nothing scheduled'}</h1>
-      <p class="hero-groups">${next ? `Next up is ${esc(next.session.title)} on ${esc(fmtShort(next.date))}.` : ''}</p>
+      <p class="hero-groups">${isDisabled(d)
+        ? 'You turned this one off. The weekly schedule underneath is untouched.'
+        : (next ? `Next up is ${esc(next.session.title)} on ${esc(fmtShort(next.date))}.` : '')}</p>
       <p class="hero-count">Not trained this week yet: ${esc(open)}</p>
       <div class="hero-actions">
-        <button class="btn" data-activate="${key(d)}">Activate this day</button>
+        ${isDisabled(d)
+          ? `<button class="btn" data-deactivate="${key(d)}">Turn this day back on</button>`
+          : `<button class="btn" data-activate="${key(d)}">Activate this day</button>`}
         <button class="btn btn-quiet" data-edit="1">Muscle groups</button>
       </div>
       <div class="hero-actions">
-        ${isDisabled(d) ? `<button class="btn btn-quiet" data-deactivate="${key(d)}">Put the schedule back</button>` : ''}
+        ${isDisabled(d) ? `<button class="btn btn-quiet" data-activate="${key(d)}">Use it as a catch up day</button>` : ''}
         <button class="btn btn-quiet" data-move="1">Move a day here</button>
       </div>
     </section>`;
@@ -3159,11 +3181,14 @@ function dayMover(d) {
   }).join('');
   return `
     <section class="mover">
-      <p class="mover-head">Swap ${esc(WEEKDAY_NAMES[wd - 1])} with which day?</p>
+      <div class="panel-head">
+        <p class="mover-head">Swap ${esc(WEEKDAY_NAMES[wd - 1])} with which day?</p>
+        <button class="panel-x" data-move="0" aria-label="Close">&times;</button>
+      </div>
       <div class="mover-grid">${cells}</div>
       <div class="mover-foot">
         <button class="linky" data-resetweek="1">Reset the week to defaults</button>
-        <button class="linky" data-move="0">Cancel</button>
+        <button class="linky" data-move="0">&larr; Back to the day</button>
       </div>
     </section>`;
 }
@@ -3307,10 +3332,13 @@ function weekBand(viewed) {
   const days = weekOf(viewed);
   const cells = days.map(d => {
     const rec = log[key(d)];
+    const future = d > t && key(d) !== key(t);
     const cls = ['band-day'];
     if (rec) cls.push('is-done');
     if (key(d) === key(t)) cls.push('is-today');
-    return `<button class="${cls.join(' ')}" data-daylog="${key(d)}">
+    if (future) cls.push('is-future');
+    return `<button class="${cls.join(' ')}" ${future ? 'disabled' : `data-daylog="${key(d)}"`}
+      ${future ? 'title="Not here yet. Plan it in the week below."' : ''}>
       <span class="bd-w">${esc(d.toLocaleDateString(undefined, { weekday: 'narrow' }))}</span>
       <span class="bd-n">${d.getDate()}</span>
       <span class="bd-tick">${rec ? '&check;' : '&nbsp;'}</span>
@@ -3320,6 +3348,7 @@ function weekBand(viewed) {
   return `<section class="band">
     <p class="band-head"><span class="band-week">Week ${isoWeek(viewed)}</span>
       <span>${done} of 7 days logged</span></p>
+    <p class="band-note">Tap a day up to today to see or add its log. Plan ahead in the week below.</p>
     <div class="band-grid">${cells}</div>
   </section>`;
 }
@@ -3338,7 +3367,10 @@ function groupEditor(d) {
   ).join('');
 
   return `<section class="groups">
-    <h3>Muscle groups for this day</h3>
+    <div class="panel-head">
+      <h3>Muscle groups for this day</h3>
+      <button class="panel-x" data-edit="0" aria-label="Close">&times;</button>
+    </div>
     <p class="hint">Adding a group brings in ${PER_GROUP[state.split] || 3} exercises at 3 sets. The time estimate follows along.</p>
     <div class="chips">${chips}</div>
     <div class="cardio-form">
@@ -3353,7 +3385,7 @@ function groupEditor(d) {
         <button class="btn" data-savecardio="1" data-d="${key(d)}">Add</button>
       </div>
     </div>
-    <div class="mover-foot"><button class="linky" data-edit="0">Done</button></div>
+    <div class="mover-foot"><button class="linky" data-edit="0">&larr; Back to the day</button></div>
   </section>`;
 }
 
@@ -3926,7 +3958,11 @@ function bind() {
   });
   on('[data-closezoom]', () => { state.zoom = null; render(); });
   on('[data-daylog]', el => { state.logDate = el.dataset.daylog; state.screen = 'daylog'; render(); });
-  on('[data-disable]', el => { disableDay(el.dataset.disable); render(); });
+  on('[data-disable]', el => {
+    disableDay(el.dataset.disable);
+    state.editing = false; state.moving = false; state.swapGroup = null;
+    render();
+  });
   on('[data-edit]', el => { state.editing = el.dataset.edit === '1'; render(); });
   on('[data-group]', el => {
     if (!toggleGroup(dateOf(el.dataset.d), el.dataset.group)) alert('A day needs at least one muscle group. Turn the day off instead.');
