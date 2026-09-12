@@ -2,7 +2,7 @@
 
 Simple workouts. Real results. A dumbbell only training app that knows what day it is.
 
-Version 15. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
+Version 16. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
 
 ## The repo
 
@@ -300,14 +300,37 @@ starting a session, and starting a session while music is playing does not inter
 element lives outside the screen, so redrawing never touches playback. Play and pause, a skip button, a volume
 slider, and a station list.
 
-Five live stations, all from SomaFM, which is free and listener supported: **Fluid** for
-instrumental hip hop, **Groove Salad** for ambient downtempo, **Beat Blender** for deep house,
-**Secret Agent** for lounge, and **Drone Zone** for ambient with no beat. There is also a field to
-paste any other stream address.
+Fourteen options, grouped by what you are doing:
 
-The sixth option is **Built in loop**. That one needs no connection at all. It generates a slow
-seventy four beat per minute pad and beat on your phone with the Web Audio API, so it still works
-in a basement gym with no signal.
+| Group | Stations |
+|-------|----------|
+| Warm up and cool down | Fluid, Groove Salad, Secret Agent, Drone Zone |
+| Working sets | Beat Blender, The Trip, Rektory, cliqhop idm |
+| Heavy and loud | Darksynth, Dub Step Beyond, Metal Detector, PopTron |
+| No connection needed | Built in loop, Built in beat |
+
+Rektory is straight techno, Darksynth is aggressive synthwave built for heavy sets, and Metal
+Detector is exactly what it sounds like. The live stations come from SomaFM and Nightride FM, both
+free. There is also a field to paste any other stream address.
+
+The last two need no connection at all. **Built in loop** is the slow seventy four beat per minute
+pad for rest and warm ups. **Built in beat** is a hundred and twenty eight beat per minute techno
+loop with a moving filter, a hard kick on every other step and a stab on the offbeat. Both are
+generated on your phone with the Web Audio API, so they work in a basement with no signal.
+
+## Volume
+
+Full width slider with a percentage readout, plus mute and full volume buttons at either end.
+
+**If the slider does nothing for live stations, your phone is the reason.** iOS refuses to let a
+web page set the volume of streaming audio; only the hardware buttons do that. The app checks
+whether the browser actually honours the setting and, if it does not, says so under the slider
+instead of leaving you guessing. The built in loops go through Web Audio rather than a media
+element, so the slider always works for those.
+
+I also removed a CORS requirement that was on the audio element. It was demanding permission
+headers that some stations do not send, which would have stopped them playing at all. We never
+need to read the audio samples, only play them.
 
 Your station and volume are remembered. Music starts when you press Start workout, since browsers
 only allow audio to begin from a tap.
@@ -332,9 +355,9 @@ yourself, and a **Leave tester mode** button to come back out.
 
 ## During the set
 
-Two things above the controls: the animated figure showing the path the weight travels, and your
-infographic directly under it with the start, press and lower photos, the muscle map and the
-mistakes list. Movement first, detail underneath.
+Top to bottom: the animated figure, the exercise name, the set counter and progress bar, weight
+and reps, then the buttons. Your infographic sits below all of it. Everything you touch mid set is
+reachable without scrolling past a picture.
 
 ## Finishing an exercise
 
@@ -357,6 +380,16 @@ On the final exercise it says **Last one** instead, and the button reads Finish 
 The exercise animation stops when the set does. Rest shows its own figure instead: someone sat on
 the bench, breathing slowly, at about thirteen breaths a minute. It is a different picture, a
 cooler colour, and a much slower rhythm, so a glance tells you whether you are working or waiting.
+
+## Reps
+
+Weight and reps sit side by side above the buttons. Reps start at 10 and change one at a time.
+Each exercise remembers its own number, and it travels between devices with the rest of your
+settings.
+
+Both are logged: the reps you actually did, and the plan they came from, as separate columns in
+the sheet. Ten reps against a target of 8 to 12 reads differently from ten against a target of 20.
+Past workouts take reps as well.
 
 ## During a set
 
