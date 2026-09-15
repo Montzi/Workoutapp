@@ -2799,7 +2799,7 @@ const session = {
       mark: plan.mark,
       title: plan.title,
       groups: plan.groups,
-      order: (order && order.length ? order.slice() : plan.groups.flatMap(byGroup).map(e => e.id)),
+      order: [...new Set(order && order.length ? order : plan.groups.flatMap(byGroup).map(e => e.id))],
       idx: Math.min(Math.max(0, startIdx || 0), (order || []).length ? order.length - 1 : 0),
       phase: 'proposed',        // proposed | set | rest | done
       setsDone: 0,
@@ -2844,15 +2844,23 @@ const session = {
 
   accept() { this.data.phase = 'set'; this.save(); },
 
+  /* Put a specific exercise in the current slot. Never one that is already
+     somewhere else in this session. */
+  swapTo(id) {
+    const ex = byId(id);
+    if (!ex) return false;
+    if (this.data.order.indexOf(id) >= 0) return false;
+    this.data.order[this.data.idx] = id;
+    this.data.setsDone = 0;
+    this.save();
+    return true;
+  },
+
   swap() {
     const ex = this.exercise;
     const used = new Set(this.data.order);
     const alt = byGroup(ex.group).find(e => !used.has(e.id));
-    if (!alt) return false;
-    this.data.order[this.data.idx] = alt.id;
-    this.data.setsDone = 0;
-    this.save();
-    return true;
+    return alt ? this.swapTo(alt.id) : false;
   },
 
   logSet(ex, marked) {
@@ -3030,6 +3038,7 @@ const state = {
   logDate: null,
   zoom: null,
   swapGroup: null,
+  pickSwap: false,
   manual: null,
   pending: null,
   cdEnd: null,
@@ -3307,20 +3316,37 @@ function orderKey(date) {
 
 function defaultOrder(plan) {
   const n = PER_GROUP[state.split] || 3;
-  return plan.groups.flatMap(g => byGroup(g).slice(0, n).map(e => e.id));
+  const groups = [...new Set(plan.groups)];
+  return dedupe(groups.flatMap(g => byGroup(g).slice(0, n).map(e => e.id)));
 }
 
 function orderFor(date) {
   const plan = sessionFor(date);
   if (!plan) return [];
   const saved = store.get('orders', {})[orderKey(date)];
-  if (Array.isArray(saved) && saved.length && saved.every(id => byId(id))) return saved;
-  return defaultOrder(plan);
+  if (Array.isArray(saved) && saved.length) {
+    /* Drop anything unknown or repeated rather than throwing away the whole
+       list. One bad entry should not cost you a session you arranged. */
+    const clean = dedupe(saved);
+    if (clean.length) return clean;
+  }
+  return dedupe(defaultOrder(plan));
+}
+
+/* The single gate every change to a session list goes through. An exercise
+   appears once or not at all, whatever route put it there. */
+function dedupe(ids) {
+  const seen = new Set();
+  return ids.filter(id => {
+    if (!byId(id) || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
 }
 
 function setOrder(date, ids) {
   const o = store.get('orders', {});
-  o[orderKey(date)] = ids;
+  o[orderKey(date)] = dedupe(ids);
   store.set('orders', o);
 }
 
@@ -3374,7 +3400,7 @@ function swapGroupFor(date, from, to) {
   const fresh = byGroup(to).slice(0, take).map(e => e.id);
   const kept = ids.filter(id => byId(id).group !== from);
   const insert = at < 0 ? kept.length : Math.min(at, kept.length);
-  const next = kept.slice(0, insert).concat(fresh, kept.slice(insert));
+  const next = dedupe(kept.slice(0, insert).concat(fresh, kept.slice(insert)));
 
   plan.groups = plan.groups.map(g => (g === from ? to : g));
   plan.title = titleFor(plan.groups);
@@ -4320,6 +4346,23 @@ function cheerBlock(ex) {
     </div>`;
 }
 
+/* Everything in this muscle group that is not already somewhere in the session. */
+function swapOptions(ex) {
+  const used = new Set(session.data.order);
+  return byGroup(ex.group).filter(e => e.id !== ex.id && !used.has(e.id));
+}
+
+function swapPicker(ex) {
+  const opts = swapOptions(ex);
+  return `<div class="gsec-swap">
+    <p class="hint">${opts.length
+      ? 'Swap this for another ' + esc(GROUPS[ex.group].name.toLowerCase()) + ' exercise. The rest of the session stays as it is.'
+      : 'Every ' + esc(GROUPS[ex.group].name.toLowerCase()) + ' exercise is already in this session.'}</p>
+    <div class="chips">${opts.map(e =>
+      `<button class="chip" data-swapto-ex="${e.id}">${esc(e.name)}</button>`).join('')}</div>
+  </div>`;
+}
+
 function weightPicker(ex) {
   const w = session.weight(ex.id);
   const r = session.reps(ex.id);
@@ -4344,8 +4387,9 @@ function proposedBlock(ex) {
     ${ex.cardio ? '' : weightPicker(ex)}
     <div class="hero-actions">
       <button class="btn" data-accept="1">Accept</button>
-      <button class="btn btn-quiet" data-swap="1">New exercise</button>
+      <button class="btn btn-quiet" data-pickswap="${state.pickSwap ? '0' : '1'}">${state.pickSwap ? 'Keep this one' : 'Change exercise'}</button>
     </div>
+    ${state.pickSwap ? swapPicker(ex) : ''}
     <div class="hero-actions">
       <button class="btn btn-quiet" data-markdone="1">Mark as done</button>
     </div>
@@ -4551,9 +4595,14 @@ function bind() {
   on('[data-cdskip]', () => beginSession(state.pending.dk, state.pending.idx));
   on('[data-cdcancel]', () => { state.pending = null; state.cdEnd = null; state.screen = 'home'; releaseScreen(); render(); });
   on('[data-resume]', () => { state.screen = 'run'; holdScreen(); render(); });
-  on('[data-accept]', () => { session.accept(); render(); });
-  on('[data-swap]', () => { if (!session.swap()) alert('No other exercise left for this muscle group.'); render(); });
-  on('[data-skipex]', () => { session.skipExercise(); render(); });
+  on('[data-accept]', () => { state.pickSwap = false; session.accept(); render(); });
+  on('[data-pickswap]', el => { state.pickSwap = el.dataset.pickswap === '1'; render(); });
+  on('[data-swapto-ex]', el => {
+    if (!session.swapTo(el.dataset.swaptoEx)) alert('That exercise is already in this session.');
+    state.pickSwap = false;
+    render();
+  });
+  on('[data-skipex]', () => { state.pickSwap = false; session.skipExercise(); render(); });
   on('[data-markdone]', () => { session.completeExercise(); render(); });
   on('[data-done]', () => {
     session.completeSet();
