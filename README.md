@@ -2,7 +2,7 @@
 
 Simple workouts. Real results. A dumbbell only training app that knows what day it is.
 
-Version 16. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
+Version 17. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
 
 ## The repo
 
@@ -131,6 +131,14 @@ for that day, lets you add or drop either, and takes a duration in five minute s
 writes it to the log and pushes it to the sheet flagged as `added later`, so the record stays
 honest about how it got there. A saved log can also be deleted and redone.
 
+## No exercise twice in one session
+
+An exercise appears once in a session or not at all. Every route that can change a session list,
+replacing a row, changing a muscle group, swapping a whole group, adding cardio, editing a past
+workout, or picking a different exercise mid session, goes through one gate that enforces it. A
+saved list that somehow ends up with a repeat or an unknown exercise is repaired on read rather
+than thrown away.
+
 ## Muscle groups per day
 
 Every day card has a **Muscle groups** button. Eight chips: the seven muscle groups plus Cardio.
@@ -192,7 +200,10 @@ Sets you marked done rather than worked through are flagged as such.
   interleave.
 - **Tap any exercise** to open it, then **Start the session here** begins the workout on that
   exercise instead of the first one. **Replace** is there too.
-- **New exercise** during a workout does the same swap mid session.
+- **Change exercise** during a workout opens a list of the other exercises in that muscle group
+  and lets you pick which one you want, rather than cycling blindly. Only exercises not already in
+  the session are offered, so the third chest slot can become any chest lift you have not done yet.
+  It appears while an exercise is proposed, before you accept it.
 - **Mark as done** on any exercise during a session logs every set it still owes and moves straight
   to the next one. Use it when you did the work off the clock. Those rows land in the sheet with
   `marked done` in the Note column, so they are honest about how they got there. **Skip this
