@@ -2,7 +2,7 @@
 
 Simple workouts. Real results. A dumbbell only training app that knows what day it is.
 
-Version 17. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
+Version 18. **One HTML file, plus your pictures as files.** Everything is inside `index.html`, so an update means replacing a single file.
 
 ## The repo
 
@@ -157,6 +157,22 @@ minutes. Custom sessions are saved and reusable.
 Cardio behaves differently inside a workout. No weight picker, no sets, no rest countdown. It
 shows the target length, the session clock keeps running, and you log it when you come back.
 In the time estimate a cardio block counts its full length plus the usual changeover minutes.
+
+## The menu
+
+The three lines to the left of the greeting. Inside:
+
+**What you have.** Four toggles: Dumbbells, Bodyweight, Kettlebell, Bands, each showing how many
+exercises it brings. Only what you have turned on is offered when the app suggests or replaces an
+exercise. Dumbbells alone is the default, so nothing changed until you go in and say otherwise.
+Turn dumbbells off and the app becomes a bodyweight app. At least one has to stay on.
+
+Anything already in a session stays put regardless. Turning off a kind of equipment changes what
+gets offered, never what you already planned.
+
+**History** and **Tester mode** moved in here too, off the home screen.
+
+The setting travels between devices with the rest of your preferences.
 
 ## Getting out of a panel
 
